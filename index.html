@@ -77,7 +77,7 @@
     .timer-settings { width:min(100%,320px); display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:12px; }
     .duration-setting { display:grid; grid-template-columns:minmax(0,1fr) 68px; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:11px; background:#111216; }
     .duration-setting label { color:var(--muted); font-size:11px; }
-    .duration-input { width:100%; min-width:0; color:var(--text); background:var(--surface-2); border:1px solid var(--line); border-radius:8px; padding:6px 5px; text-align:center; font-size:12px; }
+    .duration-input { width:100%; min-width:0; color:var(--text); background:var(--surface-2); border:1px solid var(--line); border-radius:8px; padding:6px 5px; text-align:right; font-size:12px; }
     .duration-input:focus { outline:1px solid rgba(199,243,107,.5); }
     .duration-input:disabled { opacity:.5; cursor:not-allowed; }
     .clock { --progress:100%; width:222px; aspect-ratio:1; border-radius:50%; display:grid; place-items:center; position:relative; margin:23px 0 17px; background:conic-gradient(var(--lime) var(--progress), rgba(255,255,255,.075) 0); transition:background .25s linear; }
@@ -194,8 +194,8 @@
             <button class="mode-btn" type="button" data-mode="break" aria-pressed="false">Отдых · 5 мин</button>
           </div>
           <div class="timer-settings" aria-label="Настройка длительности таймера">
-            <div class="duration-setting"><label for="studyDuration">Учёба, мин</label><input class="duration-input" id="studyDuration" data-duration="study" type="number" min="1" step="1" value="25" inputmode="numeric"></div>
-            <div class="duration-setting"><label for="breakDuration">Отдых, мин</label><input class="duration-input" id="breakDuration" data-duration="break" type="number" min="1" step="1" value="5" inputmode="numeric"></div>
+            <div class="duration-setting"><label for="studyDuration">Учёба, мин</label><input class="duration-input" id="studyDuration" data-duration="study" type="text" inputmode="numeric" pattern="[0-9]*" value="25"></div>
+            <div class="duration-setting"><label for="breakDuration">Отдых, мин</label><input class="duration-input" id="breakDuration" data-duration="break" type="text" inputmode="numeric" pattern="[0-9]*" value="5"></div>
           </div>
           <div class="clock" id="clockRing" role="timer" aria-label="25 минут 00 секунд">
             <div class="clock-inner"><span class="timer-time" id="timerDisplay">25:00</span><span class="timer-caption" id="timerCaption">Время учиться</span></div>
@@ -361,24 +361,41 @@
         document.querySelectorAll('.duration-input').forEach(input => { input.disabled = disabled; });
       }
       updateModeLabels();
-      document.querySelectorAll('.duration-input').forEach(input => input.addEventListener('change', () => {
-        const changedMode = input.dataset.duration;
-        const raw = Number(input.value);
-        if (!Number.isSafeInteger(raw) || raw < 1 || raw > MAX_DURATION_MINUTES) {
-          input.value = state.timerDurations[changedMode];
-          return;
-        }
-        state.timerDurations[changedMode] = raw;
-        updateModeLabels();
-        persist();
-        if (!interval && mode === changedMode) {
-          remaining = durationSeconds(mode);
-          saveTimer(false);
-          startPause.textContent = 'Старт';
-          paintTimer();
-        }
-        $('#timerNote').textContent = 'Новая длительность сохранена.';
-      }));
+      function placeDurationCaretAtEnd(input) {
+        requestAnimationFrame(() => {
+          if (document.activeElement === input) input.setSelectionRange(input.value.length, input.value.length);
+        });
+      }
+      document.querySelectorAll('.duration-input').forEach(input => {
+        input.addEventListener('focus', () => placeDurationCaretAtEnd(input));
+        input.addEventListener('pointerup', () => placeDurationCaretAtEnd(input));
+        input.addEventListener('click', () => placeDurationCaretAtEnd(input));
+        input.addEventListener('keydown', event => {
+          if (event.key === 'ArrowLeft' || event.key === 'Home') {
+            event.preventDefault();
+            placeDurationCaretAtEnd(input);
+          }
+        });
+        input.addEventListener('change', () => {
+          const changedMode = input.dataset.duration;
+          const raw = Number(input.value);
+          if (!Number.isSafeInteger(raw) || raw < 1 || raw > MAX_DURATION_MINUTES) {
+            input.value = state.timerDurations[changedMode];
+            placeDurationCaretAtEnd(input);
+            return;
+          }
+          state.timerDurations[changedMode] = raw;
+          updateModeLabels();
+          persist();
+          if (!interval && mode === changedMode) {
+            remaining = durationSeconds(mode);
+            saveTimer(false);
+            startPause.textContent = 'Старт';
+            paintTimer();
+          }
+          $('#timerNote').textContent = 'Новая длительность сохранена.';
+        });
+      });
       function saveTimer(running) {
         state.timerMode = mode; state.timerRemaining = remaining;
         state.timerRunning = running; state.timerEndsAt = running ? endsAt : null;
