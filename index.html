@@ -139,6 +139,12 @@
     .dialog-head { display:flex; justify-content:space-between; align-items:center; gap:12px; }
     .dialog-head h3 { margin:0; font-size:18px; }
     .dialog-actions { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:8px; }
+    .task-filters { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; margin-top:16px; }
+    .period-filters { grid-column:1/-1; display:flex; gap:5px; overflow-x:auto; padding:4px; border:1px solid var(--line); border-radius:12px; background:#111216; }
+    .period-filter { flex:1; min-width:max-content; cursor:pointer; border:0; border-radius:9px; padding:8px 11px; color:var(--muted); background:transparent; font-size:12px; }
+    .period-filter.active { color:var(--text); background:#2a2c32; }
+    .filter-field { min-width:0; display:grid; gap:5px; color:var(--muted); font-size:11px; }
+    .filter-field select { width:100%; }
     .footnote { display:flex; justify-content:center; gap:7px; align-items:center; margin-top:17px; color:#747780; font-size:11px; }
     .footnote span { color:var(--lime); }
     .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
@@ -156,6 +162,7 @@
       .task-form { grid-template-columns:minmax(0,1fr) 42px; }
       .task-item { grid-template-columns:auto minmax(0,1fr); }
       .task-actions { grid-column:2; }
+      .task-filters { grid-template-columns:1fr; }
     }
     @media (max-width:390px) {
       .today-pill { font-size:11px; padding:7px 9px; }
@@ -257,6 +264,15 @@
           <button class="add-btn" type="submit" aria-label="Добавить задачу">+</button>
         </form>
         <label class="urgent-toggle"><input type="checkbox" id="urgentInput"> Отметить как срочную</label>
+        <div class="task-filters">
+          <div class="period-filters" role="group" aria-label="Показать задания за период">
+            <button class="period-filter active" type="button" data-task-period="all" aria-pressed="true">Все</button>
+            <button class="period-filter" type="button" data-task-period="today" aria-pressed="false">Сегодня</button>
+            <button class="period-filter" type="button" data-task-period="week" aria-pressed="false">Неделя</button>
+          </div>
+          <label class="filter-field" for="taskSubjectFilter"><span>Предмет</span><select class="field" id="taskSubjectFilter"><option value="all">Все предметы</option></select></label>
+          <label class="filter-field" for="taskStatusFilter"><span>Статус</span><select class="field" id="taskStatusFilter"><option value="all">Любой статус</option><option value="open">В работе</option><option value="overdue">Просрочено</option><option value="done">Выполнено</option><option value="urgent">Срочно</option></select></label>
+        </div>
         <ul class="task-list" id="taskList"></ul>
         <dialog class="task-dialog" id="taskEditDialog">
           <form class="dialog-form" id="taskEditForm">
@@ -287,15 +303,22 @@
         const d = new Date();
         return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
       };
+      const dateKey = (date) => [date.getFullYear(),String(date.getMonth()+1).padStart(2,'0'),String(date.getDate()).padStart(2,'0')].join('-');
       const defaultDeadline = () => {
         const d = new Date(); d.setDate(d.getDate() + 14);
         return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
       };
-      let state = { eventName:'Подготовка к важному дню', eventDate:defaultDeadline(), tasks:[], focusId:null, sessionDay:todayKey(), sessions:0, timerMode:'study', timerDurations:{...DEFAULT_DURATIONS}, timerRemaining:DEFAULT_DURATIONS.study * 60, timerEndsAt:null, timerRunning:false };
+      let state = { eventName:'Подготовка к важному дню', eventDate:defaultDeadline(), tasks:[], focusId:null, taskFilters:{period:'all',subject:'all',status:'all'}, sessionDay:todayKey(), sessions:0, timerMode:'study', timerDurations:{...DEFAULT_DURATIONS}, timerRemaining:DEFAULT_DURATIONS.study * 60, timerEndsAt:null, timerRunning:false };
       try {
         const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
         if (saved && typeof saved === 'object') state = { ...state, ...saved, tasks:Array.isArray(saved.tasks) ? saved.tasks : [] };
       } catch (error) { console.warn('Не удалось прочитать сохранённые данные.', error); }
+      const savedTaskFilters = state.taskFilters && typeof state.taskFilters === 'object' ? state.taskFilters : {};
+      state.taskFilters = {
+        period:['all','today','week'].includes(savedTaskFilters.period) ? savedTaskFilters.period : 'all',
+        subject:typeof savedTaskFilters.subject === 'string' ? savedTaskFilters.subject : 'all',
+        status:['all','open','overdue','done','urgent'].includes(savedTaskFilters.status) ? savedTaskFilters.status : 'all'
+      };
       state.timerDurations = {
         study:normalizeDuration(state.timerDurations?.study, 'study'),
         break:normalizeDuration(state.timerDurations?.break, 'break')
@@ -327,9 +350,28 @@
       function renderTasks() {
         const list = $('#taskList');
         const sorted = [...state.tasks].sort((a,b) => Number(a.done)-Number(b.done) || (a.dueDate || '9999-12-31').localeCompare(b.dueDate || '9999-12-31') || Number(b.urgent)-Number(a.urgent) || b.created-a.created);
+        const today = todayKey(), weekEnd = new Date(today + 'T00:00:00');
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        const visible = sorted.filter(task => {
+          const filters = state.taskFilters, weekEndKey = dateKey(weekEnd);
+          if (filters.period === 'today' && task.dueDate !== today) return false;
+          if (filters.period === 'week' && (!task.dueDate || task.dueDate < today || task.dueDate > weekEndKey)) return false;
+          if (filters.subject !== 'all' && task.subject !== filters.subject) return false;
+          if (filters.status === 'open' && task.done) return false;
+          if (filters.status === 'done' && !task.done) return false;
+          if (filters.status === 'overdue' && (task.done || !task.dueDate || task.dueDate >= today)) return false;
+          if (filters.status === 'urgent' && (task.done || !task.urgent)) return false;
+          return true;
+        });
         $('#taskCount').textContent = `${state.tasks.length} ${state.tasks.length === 1 ? 'задача' : state.tasks.length >= 2 && state.tasks.length <= 4 ? 'задачи' : 'задач'}`;
+        if (visible.length !== sorted.length) $('#taskCount').textContent = visible.length + ' из ' + sorted.length;
         if (!sorted.length) { list.innerHTML = '<li class="empty-state">Начни с небольшого шага: «Прочитать параграф», «Решить 3 задачи» или «Повторить слова».</li>'; return; }
-        list.innerHTML = sorted.map(task => `<li class="task-item ${task.done ? 'done' : ''}" data-id="${escapeHtml(task.id)}">
+        if (!visible.length) {
+          list.innerHTML = '<li class="empty-state">По этим фильтрам заданий нет. <button class="btn" id="resetTaskFilters" type="button">Сбросить фильтры</button></li>';
+          $('#resetTaskFilters').addEventListener('click', resetTaskFilters);
+          return;
+        }
+        list.innerHTML = visible.map(task => `<li class="task-item ${task.done ? 'done' : ''}" data-id="${escapeHtml(task.id)}">
           <input class="check" type="checkbox" aria-label="Отметить выполненной" ${task.done ? 'checked' : ''}>
           <div class="task-copy"><div class="task-name">${escapeHtml(task.name)}</div><div class="task-meta"><span class="tag">${escapeHtml(task.subject)}</span>${task.urgent ? '<span class="urgent">● Срочно</span>' : ''}${getDueBadge(task.dueDate)}</div></div>
           <div class="task-actions"><button class="focus-task-btn" type="button">Взять в фокус</button><button class="delete-btn" type="button" aria-label="Удалить задачу">×</button></div>
@@ -398,6 +440,30 @@
         state.tasks.push({ id: (globalThis.crypto && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`, name, subject:$('#taskSubject').value, dueDate:dueInput.value || null, urgent:$('#urgentInput').checked, done:false, created:Date.now() });
         input.value = ''; resizeTaskInput(); dueInput.value = ''; $('#urgentInput').checked = false; persist(); renderTasks(); input.focus();
       });
+      function syncTaskFilters() {
+        document.querySelectorAll('[data-task-period]').forEach(button => {
+          const active = button.dataset.taskPeriod === state.taskFilters.period;
+          button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
+        });
+        $('#taskSubjectFilter').value = state.taskFilters.subject;
+        $('#taskStatusFilter').value = state.taskFilters.status;
+      }
+      function resetTaskFilters() {
+        state.taskFilters = { period:'all', subject:'all', status:'all' };
+        syncTaskFilters(); persist(); renderTasks();
+      }
+      const taskSubjectFilter = $('#taskSubjectFilter');
+      Array.from($('#taskSubject').options).forEach(option => {
+        const filterOption = document.createElement('option');
+        filterOption.value = option.value; filterOption.textContent = option.textContent; taskSubjectFilter.append(filterOption);
+      });
+      if (!Array.from(taskSubjectFilter.options).some(option => option.value === state.taskFilters.subject)) state.taskFilters.subject = 'all';
+      syncTaskFilters();
+      document.querySelectorAll('[data-task-period]').forEach(button => button.addEventListener('click', () => {
+        state.taskFilters.period = button.dataset.taskPeriod; syncTaskFilters(); persist(); renderTasks();
+      }));
+      taskSubjectFilter.addEventListener('change', () => { state.taskFilters.subject = taskSubjectFilter.value; persist(); renderTasks(); });
+      $('#taskStatusFilter').addEventListener('change', () => { state.taskFilters.status = $('#taskStatusFilter').value; persist(); renderTasks(); });
       renderTasks(); renderFocus();
 
       let mode = state.timerMode === 'break' ? 'break' : 'study';
