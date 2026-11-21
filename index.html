@@ -6,10 +6,10 @@
   <meta name="theme-color" content="#101312">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Сфокусируйся">
+  <meta name="apple-mobile-web-app-title" content="Сфокусируйся 2.0">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
-  <title>Сфокусируйся — учебный планировщик</title>
+  <title>Сфокусируйся 2.0 — учебный планировщик</title>
   <style> :root {
   color-scheme: dark;
   --bg: #101312;
@@ -100,6 +100,7 @@ button:disabled,input:disabled,select:disabled { cursor: not-allowed; opacity: .
 .brand-mark svg { width:21px; height:21px; }
 .brand-copy { display:grid; gap:1px; }
 .brand-copy strong { color:var(--text); font-size:16px; font-weight:720; letter-spacing:-.035em; }
+.brand-version { padding-left:4px; color:var(--accent); font-size:.72em; font-weight:700; letter-spacing:-.015em; vertical-align:top; }
 .brand-copy small { color:var(--muted); font-size:11px; letter-spacing:.02em; }
 .topbar-actions { display:flex; align-items:center; justify-content:flex-end; gap:10px; }
 .theme-toggle {
@@ -498,7 +499,7 @@ dialog[open] { animation:dialog-enter .17s ease-out; }
     <header class="topbar">
       <a class="brand" href="#focusSection" aria-label="Сфокусируйся — главная">
         <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2.8 14.4 9.6 21.2 12l-6.8 2.4L12 21.2l-2.4-6.8L2.8 12l6.8-2.4L12 2.8Z" stroke="currentColor" stroke-width="1.65" stroke-linejoin="round"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg></div>
-        <div class="brand-copy"><strong>Сфокусируйся</strong><small>Твой учебный план</small></div>
+        <div class="brand-copy"><strong>Сфокусируйся<span class="brand-version">2.0</span></strong><small>Персональный план учёбы</small></div>
       </a>
       <div class="topbar-actions">
         <button class="theme-toggle" id="themeToggle" type="button" aria-label="Переключить цветовую тему" aria-pressed="false">
