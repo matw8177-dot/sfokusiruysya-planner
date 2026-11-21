@@ -218,7 +218,7 @@
         const d = new Date(); d.setDate(d.getDate() + 14);
         return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
       };
-      let state = { eventName:'Подготовка к важному дню', eventDate:defaultDeadline(), tasks:[], focusId:null, sessionDay:todayKey(), sessions:0 };
+      let state = { eventName:'Подготовка к важному дню', eventDate:defaultDeadline(), tasks:[], focusId:null, sessionDay:todayKey(), sessions:0, timerMode:'study', timerRemaining:MODES.study, timerEndsAt:null, timerRunning:false };
       try {
         const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
         if (saved && typeof saved === 'object') state = { ...state, ...saved, tasks:Array.isArray(saved.tasks) ? saved.tasks : [] };
@@ -277,8 +277,15 @@
       });
       renderTasks(); renderFocus();
 
-      let mode = 'study', remaining = MODES.study, interval = null, endsAt = null, audioContext = null;
+      let mode = MODES[state.timerMode] ? state.timerMode : 'study';
+      let remaining = Number.isFinite(state.timerRemaining) ? Math.max(0, Math.min(MODES[mode], state.timerRemaining)) : MODES[mode];
+      let interval = null, endsAt = null, audioContext = null;
       const display = $('#timerDisplay'), ring = $('#clockRing'), startPause = $('#startPause');
+      function saveTimer(running) {
+        state.timerMode = mode; state.timerRemaining = remaining;
+        state.timerRunning = running; state.timerEndsAt = running ? endsAt : null;
+        persist();
+      }
       function paintTimer() {
         const mins = Math.floor(remaining / 60), secs = remaining % 60;
         display.textContent = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
@@ -306,38 +313,49 @@
       function finishTimer() {
         clearInterval(interval); interval = null; endsAt = null; remaining = 0; paintTimer(); soundComplete();
         $('#timerNote').textContent = mode === 'study' ? 'Сессия завершена — время немного отдохнуть.' : 'Отдых окончен — можно возвращаться к учебе.';
-        if (mode === 'study') { if (state.sessionDay !== todayKey()) { state.sessionDay = todayKey(); state.sessions = 0; } state.sessions += 1; $('#sessionCount').textContent = state.sessions; persist(); }
+        if (mode === 'study') { if (state.sessionDay !== todayKey()) { state.sessionDay = todayKey(); state.sessions = 0; } state.sessions += 1; $('#sessionCount').textContent = state.sessions; }
+        saveTimer(false);
         startPause.textContent = 'Старт'; startPause.setAttribute('aria-label','Начать таймер');
+      }
+      function updateRunningTimer() {
+        if (!endsAt) return;
+        remaining = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+        paintTimer(); if (remaining <= 0) finishTimer();
       }
       startPause.addEventListener('click', () => {
         if (interval) {
           remaining = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
           clearInterval(interval); interval = null; endsAt = null;
           if (remaining <= 0) { finishTimer(); return; }
-          paintTimer(); startPause.textContent = 'Продолжить'; $('#timerNote').textContent = 'Пауза — нажми, когда будешь готов(а).'; return;
+          saveTimer(false); paintTimer(); startPause.textContent = 'Продолжить'; $('#timerNote').textContent = 'Пауза — нажми, когда будешь готов(а).'; return;
         }
         if (remaining <= 0) remaining = MODES[mode];
         if (audioContext && audioContext.state === 'suspended') audioContext.resume();
         endsAt = Date.now() + remaining * 1000;
+        saveTimer(true);
         startPause.textContent = 'Пауза'; $('#timerNote').textContent = mode === 'study' ? 'Ты справишься. Просто продолжай.' : 'Небольшая передышка — часть работы.';
-        interval = setInterval(() => {
-          remaining = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
-          paintTimer(); if (remaining <= 0) finishTimer();
-        }, 250);
+        interval = setInterval(updateRunningTimer, 250);
       });
-      $('#resetTimer').addEventListener('click', () => { clearInterval(interval); interval = null; endsAt = null; remaining = MODES[mode]; startPause.textContent = 'Старт'; $('#timerNote').textContent = 'Один шаг за раз — у тебя получится.'; paintTimer(); });
+      $('#resetTimer').addEventListener('click', () => { clearInterval(interval); interval = null; endsAt = null; remaining = MODES[mode]; saveTimer(false); startPause.textContent = 'Старт'; $('#timerNote').textContent = 'Один шаг за раз — у тебя получится.'; paintTimer(); });
       document.querySelectorAll('.mode-btn').forEach(button => button.addEventListener('click', () => {
         clearInterval(interval); interval = null; endsAt = null; mode = button.dataset.mode; remaining = MODES[mode];
+        saveTimer(false);
         document.querySelectorAll('.mode-btn').forEach(item => { const active = item === button; item.classList.toggle('active', active); item.setAttribute('aria-pressed', String(active)); });
         startPause.textContent = 'Старт'; $('#timerCaption').textContent = mode === 'study' ? 'Время учиться' : 'Время выдохнуть'; $('#timerNote').textContent = 'Один шаг за раз — у тебя получится.'; paintTimer();
       }));
       document.addEventListener('visibilitychange', () => {
-        if (!document.hidden && interval && endsAt) {
-          remaining = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
-          paintTimer(); if (remaining <= 0) finishTimer();
-        }
+        if (!document.hidden && interval && endsAt) updateRunningTimer();
       });
-      $('#sessionCount').textContent = state.sessions || 0; paintTimer();
+      $('#sessionCount').textContent = state.sessions || 0;
+      if (state.timerRunning && Number.isFinite(state.timerEndsAt)) {
+        endsAt = state.timerEndsAt;
+        remaining = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+        if (remaining > 0) {
+          interval = setInterval(updateRunningTimer, 250); startPause.textContent = 'Пауза';
+          $('#timerNote').textContent = mode === 'study' ? 'Ты справишься. Просто продолжай.' : 'Небольшая передышка — часть работы.';
+        } else finishTimer();
+      } else { state.timerRunning = false; state.timerEndsAt = null; }
+      paintTimer();
     })();
   </script>
   <script>
