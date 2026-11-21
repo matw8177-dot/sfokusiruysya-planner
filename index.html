@@ -156,6 +156,9 @@
       .task-actions { gap:2px; }
       .focus-task-btn { padding:7px; }
     }
+    @media (pointer:coarse) {
+      .field, .duration-input, input[type=date], .task-due input { font-size:16px; }
+    }
     @media (prefers-reduced-motion: reduce) { *,*::before,*::after { scroll-behavior:auto !important; transition:none !important; } }
   </style>
 </head>
