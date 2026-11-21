@@ -88,11 +88,15 @@
     .timer-note { color:var(--muted); font-size:11px; margin-top:15px; }
     .tasks-card { padding:23px; }
     .task-count { color:var(--muted); font-size:12px; }
-    .task-form { display:grid; grid-template-columns:minmax(0,1fr) 125px auto; gap:8px; margin-top:17px; }
+    .task-form { display:grid; grid-template-columns:minmax(0,1fr) 125px 138px auto; gap:8px; margin-top:17px; }
     .field { min-width:0; color:var(--text); background:#111216; border:1px solid var(--line); border-radius:11px; padding:10px 11px; outline:none; transition:border-color .2s; }
     .field:focus { border-color:rgba(199,243,107,.5); }
     .field::placeholder { color:#6d7079; }
     select.field { cursor:pointer; }
+    .task-due { min-width:0; display:flex; align-items:center; gap:5px; padding:0 8px; border:1px solid var(--line); border-radius:11px; background:#111216; }
+    .task-due:focus-within { border-color:rgba(199,243,107,.5); }
+    .task-due span { color:var(--muted); font-size:11px; }
+    .task-due input { min-width:0; width:100%; border:0; outline:0; color:var(--text); background:transparent; padding:10px 0; font:inherit; font-size:11px; }
     .add-btn { cursor:pointer; display:grid; place-items:center; border:0; border-radius:11px; background:var(--lime); color:#17190f; width:42px; font-size:21px; font-weight:500; transition:transform .15s,background .15s; }
     .add-btn:hover { background:var(--lime-dark); transform:translateY(-1px); }
     .urgent-toggle { display:flex; align-items:center; gap:7px; color:var(--muted); cursor:pointer; font-size:12px; margin-top:11px; width:max-content; user-select:none; }
@@ -108,8 +112,11 @@
     .task-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; font-size:13px; }
     .done .task-name { text-decoration:line-through; }
     .task-meta { display:flex; align-items:center; gap:7px; margin-top:4px; }
-    .tag { color:var(--lavender); background:rgba(182,165,255,.1); border-radius:6px; padding:2px 6px; font-size:10px; }
+    .tag { max-width:min(180px,45vw); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--lavender); background:rgba(182,165,255,.1); border-radius:6px; padding:2px 6px; font-size:10px; }
     .urgent { color:var(--coral); font-size:10px; font-weight:650; }
+    .due-date { color:var(--muted); background:rgba(255,255,255,.045); border-radius:6px; padding:2px 6px; font-size:10px; white-space:nowrap; }
+    .due-date.soon { color:#ffd37b; background:rgba(255,211,123,.1); }
+    .due-date.overdue { color:var(--coral); background:rgba(255,128,110,.11); }
     .task-actions { display:flex; align-items:center; gap:5px; }
     .focus-task-btn { cursor:pointer; color:var(--lime); border:1px solid rgba(199,243,107,.22); background:rgba(199,243,107,.06); border-radius:9px; padding:7px 9px; font-size:10px; font-weight:700; white-space:nowrap; transition:background .2s; }
     .focus-task-btn:hover { background:rgba(199,243,107,.14); }
@@ -137,9 +144,11 @@
       .deadline-controls { flex-wrap:wrap; }
       .time-unit { min-width:46px; }
       .time-unit strong { font-size:23px; }
-      .task-form { grid-template-columns:minmax(0,1fr) auto; }
-      .task-form .field:first-child { grid-column:1 / -1; }
+      .task-form { grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto; }
+      .task-form #taskInput { grid-column:1 / -1; }
       .task-form select { grid-column:1; }
+      .task-due { grid-column:2; }
+      .task-form .add-btn { grid-column:3; }
       .task-actions { gap:2px; }
       .focus-task-btn { padding:7px; }
     }
@@ -222,6 +231,7 @@
               <option>Черчение</option><option>Кружок</option><option>Другое</option>
             </optgroup>
           </select>
+          <label class="task-due" for="taskDueDate"><span>Срок</span><input id="taskDueDate" type="date" aria-label="Срок выполнения, необязательно"></label>
           <button class="add-btn" type="submit" aria-label="Добавить задачу">+</button>
         </form>
         <label class="urgent-toggle"><input type="checkbox" id="urgentInput"> Отметить как срочную</label>
@@ -274,12 +284,12 @@
 
       function renderTasks() {
         const list = $('#taskList');
-        const sorted = [...state.tasks].sort((a,b) => Number(a.done)-Number(b.done) || Number(b.urgent)-Number(a.urgent) || b.created-a.created);
+        const sorted = [...state.tasks].sort((a,b) => Number(a.done)-Number(b.done) || (a.dueDate || '9999-12-31').localeCompare(b.dueDate || '9999-12-31') || Number(b.urgent)-Number(a.urgent) || b.created-a.created);
         $('#taskCount').textContent = `${state.tasks.length} ${state.tasks.length === 1 ? 'задача' : state.tasks.length >= 2 && state.tasks.length <= 4 ? 'задачи' : 'задач'}`;
         if (!sorted.length) { list.innerHTML = '<li class="empty-state">Пока список пуст. Добавь первую задачу и начни с малого.</li>'; return; }
         list.innerHTML = sorted.map(task => `<li class="task-item ${task.done ? 'done' : ''}" data-id="${escapeHtml(task.id)}">
           <input class="check" type="checkbox" aria-label="Отметить выполненной" ${task.done ? 'checked' : ''}>
-          <div class="task-copy"><div class="task-name">${escapeHtml(task.name)}</div><div class="task-meta"><span class="tag">${escapeHtml(task.subject)}</span>${task.urgent ? '<span class="urgent">● Срочно</span>' : ''}</div></div>
+          <div class="task-copy"><div class="task-name">${escapeHtml(task.name)}</div><div class="task-meta"><span class="tag">${escapeHtml(task.subject)}</span>${task.urgent ? '<span class="urgent">● Срочно</span>' : ''}${getDueBadge(task.dueDate)}</div></div>
           <div class="task-actions"><button class="focus-task-btn" type="button">Взять в фокус</button><button class="delete-btn" type="button" aria-label="Удалить задачу">×</button></div>
         </li>`).join('');
         list.querySelectorAll('.task-item').forEach(row => {
@@ -289,6 +299,18 @@
           row.querySelector('.delete-btn').addEventListener('click', () => { state.tasks = state.tasks.filter(item => item.id !== task.id); if (state.focusId === task.id) state.focusId = null; persist(); renderTasks(); renderFocus(); });
         });
       }
+      function getDueBadge(value) {
+        if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return '';
+        const due = new Date(`${value}T00:00:00`);
+        if (Number.isNaN(due.getTime())) return '';
+        const today = new Date(); today.setHours(0,0,0,0);
+        const days = Math.round((due.getTime() - today.getTime()) / 86400000);
+        const shortDate = new Intl.DateTimeFormat('ru-RU', { day:'numeric', month:'short' }).format(due).replace(/\.$/, '');
+        if (days < 0) return `<span class="due-date overdue">Просрочено · ${escapeHtml(shortDate)}</span>`;
+        if (days === 0) return '<span class="due-date soon">Сегодня</span>';
+        if (days === 1) return '<span class="due-date soon">Завтра</span>';
+        return `<span class="due-date">${escapeHtml(shortDate)}</span>`;
+      }
       function renderFocus() {
         const task = state.tasks.find(item => item.id === state.focusId && !item.done);
         $('#focusTask').hidden = !task;
@@ -297,9 +319,9 @@
       $('#clearFocus').addEventListener('click', () => { state.focusId = null; persist(); renderFocus(); });
       $('#taskForm').addEventListener('submit', (event) => {
         event.preventDefault();
-        const input = $('#taskInput'), name = input.value.trim(); if (!name) return;
-        state.tasks.push({ id: (globalThis.crypto && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`, name, subject:$('#taskSubject').value, urgent:$('#urgentInput').checked, done:false, created:Date.now() });
-        input.value = ''; $('#urgentInput').checked = false; persist(); renderTasks(); input.focus();
+        const input = $('#taskInput'), dueInput = $('#taskDueDate'), name = input.value.trim(); if (!name) return;
+        state.tasks.push({ id: (globalThis.crypto && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`, name, subject:$('#taskSubject').value, dueDate:dueInput.value || null, urgent:$('#urgentInput').checked, done:false, created:Date.now() });
+        input.value = ''; dueInput.value = ''; $('#urgentInput').checked = false; persist(); renderTasks(); input.focus();
       });
       renderTasks(); renderFocus();
 
