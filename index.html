@@ -449,6 +449,17 @@ dialog[open] { animation:dialog-enter .18s ease-out; }
   .dialog-actions { flex-direction:column-reverse; }
   .dialog-actions .btn { width:100%; }
 }
+@media (max-width:600px) {
+  .shell {
+    padding-top:calc(env(safe-area-inset-top, 0px) + 18px);
+    padding-bottom:max(34px, env(safe-area-inset-bottom, 0px));
+  }
+  .task-form { grid-template-columns:minmax(0,1fr); }
+  .task-entry-field,.task-subject,.task-due,.add-btn { grid-column:1/-1; }
+  .task-due { width:100%; }
+  .task-due input { width:100%; min-width:0; box-sizing:border-box; }
+  .add-btn { width:100%; height:46px; min-height:46px; align-self:stretch; }
+}
 </style>
 </head>
 <body>
