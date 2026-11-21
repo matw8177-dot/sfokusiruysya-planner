@@ -94,42 +94,51 @@
     .timer-note { color:var(--muted); font-size:11px; margin-top:15px; }
     .tasks-card { padding:23px; }
     .task-count { color:var(--muted); font-size:12px; }
-    .task-form { display:grid; grid-template-columns:minmax(0,1fr) 138px 42px; gap:8px; margin-top:17px; align-items:start; }
+    .task-form { display:grid; grid-template-columns:minmax(0,1fr) 42px; gap:9px; margin-top:17px; align-items:start; }
     .field { min-width:0; color:var(--text); background:#111216; border:1px solid var(--line); border-radius:11px; padding:10px 11px; outline:none; transition:border-color .2s; }
     .task-entry { grid-column:1 / -1; display:block; width:100%; min-height:42px; resize:none; overflow:hidden; line-height:1.4; overflow-wrap:anywhere; }
+    .task-subject { grid-column:1 / -1; min-width:0; display:grid; gap:5px; color:var(--muted); font-size:11px; }
     .field:focus { border-color:rgba(199,243,107,.5); }
     .field::placeholder { color:#6d7079; }
     select.field { cursor:pointer; }
-    .task-due { min-width:0; display:flex; align-items:center; gap:5px; padding:0 8px; border:1px solid var(--line); border-radius:11px; background:#111216; }
+    .task-due { grid-column:1; min-width:0; display:grid; gap:5px; padding:0; border:0; background:transparent; color:var(--muted); font-size:11px; }
     .task-due:focus-within { border-color:rgba(199,243,107,.5); }
     .task-due span { color:var(--muted); font-size:11px; }
-    .task-due input { min-width:0; width:100%; border:0; outline:0; color:var(--text); background:transparent; padding:10px 0; font:inherit; font-size:11px; }
-    .add-btn { cursor:pointer; display:grid; place-items:center; border:0; border-radius:11px; background:var(--lime); color:#17190f; width:42px; font-size:21px; font-weight:500; transition:transform .15s,background .15s; }
+    .task-due input { min-width:0; width:100%; border:1px solid var(--line); outline:0; color:var(--text); background:#111216; border-radius:11px; padding:10px 11px; font:inherit; font-size:14px; }
+    .add-btn { grid-column:2; align-self:end; cursor:pointer; display:grid; place-items:center; border:0; border-radius:11px; background:var(--lime); color:#17190f; width:42px; height:42px; font-size:21px; font-weight:500; transition:transform .15s,background .15s; }
     .add-btn:hover { background:var(--lime-dark); transform:translateY(-1px); }
     .urgent-toggle { display:flex; align-items:center; gap:7px; color:var(--muted); cursor:pointer; font-size:12px; margin-top:11px; width:max-content; user-select:none; }
     .urgent-toggle input { accent-color:var(--coral); width:14px; height:14px; margin:0; }
     .task-list { display:grid; gap:8px; padding:0; margin:17px 0 0; list-style:none; max-height:450px; overflow:auto; }
     .task-item { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:10px; align-items:center; padding:12px; border:1px solid var(--line); border-radius:14px; background:rgba(255,255,255,.018); transition:border-color .2s,opacity .2s; }
     .task-item:hover { border-color:rgba(255,255,255,.14); }
+    .task-item, .task-copy { min-width:0; }
     .task-item.done { opacity:.53; }
     .check { appearance:none; width:18px; height:18px; border:1px solid #50525c; border-radius:6px; cursor:pointer; margin:0; display:grid; place-items:center; }
     .check:checked { background:var(--lime); border-color:var(--lime); }
     .check:checked::after { content:"✓"; color:#191c11; font-size:12px; font-weight:800; }
     .task-copy { min-width:0; }
-    .task-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; font-size:13px; }
+    .task-name { min-width:0; overflow-wrap:anywhere; white-space:normal; font-weight:600; font-size:13px; }
     .done .task-name { text-decoration:line-through; }
-    .task-meta { display:flex; align-items:center; gap:7px; margin-top:4px; }
+    .task-meta { display:flex; flex-wrap:wrap; align-items:center; gap:7px; margin-top:4px; }
     .tag { max-width:min(180px,45vw); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--lavender); background:rgba(182,165,255,.1); border-radius:6px; padding:2px 6px; font-size:10px; }
     .urgent { color:var(--coral); font-size:10px; font-weight:650; }
     .due-date { color:var(--muted); background:rgba(255,255,255,.045); border-radius:6px; padding:2px 6px; font-size:10px; white-space:nowrap; }
     .due-date.soon { color:#ffd37b; background:rgba(255,211,123,.1); }
     .due-date.overdue { color:var(--coral); background:rgba(255,128,110,.11); }
-    .task-actions { display:flex; align-items:center; gap:5px; }
+    .task-actions { display:flex; flex-wrap:wrap; align-items:center; gap:5px; min-width:0; }
     .focus-task-btn { cursor:pointer; color:var(--lime); border:1px solid rgba(199,243,107,.22); background:rgba(199,243,107,.06); border-radius:9px; padding:7px 9px; font-size:10px; font-weight:700; white-space:nowrap; transition:background .2s; }
     .focus-task-btn:hover { background:rgba(199,243,107,.14); }
+    .edit-task-btn { cursor:pointer; color:var(--text); border:1px solid var(--line); background:rgba(255,255,255,.035); border-radius:9px; padding:7px 9px; font-size:10px; font-weight:650; white-space:nowrap; }
     .delete-btn { cursor:pointer; border:0; background:transparent; color:#777a83; font-size:17px; padding:4px; line-height:1; }
     .delete-btn:hover { color:var(--coral); }
     .empty-state { color:var(--muted); text-align:center; padding:29px 12px; font-size:13px; border:1px dashed rgba(255,255,255,.09); border-radius:14px; }
+    .task-dialog { width:min(460px,calc(100% - 28px)); max-width:none; max-height:90vh; overflow:auto; border:1px solid var(--line); border-radius:20px; color:var(--text); background:var(--surface); padding:22px; }
+    .task-dialog::backdrop { background:rgba(0,0,0,.68); backdrop-filter:blur(4px); }
+    .dialog-form { display:grid; gap:13px; }
+    .dialog-head { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .dialog-head h3 { margin:0; font-size:18px; }
+    .dialog-actions { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:8px; }
     .footnote { display:flex; justify-content:center; gap:7px; align-items:center; margin-top:17px; color:#747780; font-size:11px; }
     .footnote span { color:var(--lime); }
     .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
@@ -144,7 +153,9 @@
       .focus-card,.tasks-card { padding:20px; }
       .clock { width:205px; }
       .timer-time { font-size:51px; }
-      .task-form { grid-template-columns:minmax(0,1fr) minmax(0,1fr) 42px; }
+      .task-form { grid-template-columns:minmax(0,1fr) 42px; }
+      .task-item { grid-template-columns:auto minmax(0,1fr); }
+      .task-actions { grid-column:2; }
     }
     @media (max-width:390px) {
       .today-pill { font-size:11px; padding:7px 9px; }
@@ -215,7 +226,7 @@
         <div class="section-head"><h2 class="section-title" id="tasksHeading">Учебные задачи</h2><span class="task-count" id="taskCount">0 задач</span></div>
         <form class="task-form" id="taskForm">
           <label class="sr-only" for="taskInput">Новая задача</label><textarea class="field task-entry" id="taskInput" maxlength="120" rows="1" placeholder="Что нужно сделать?" autocomplete="off" required></textarea>
-          <label class="sr-only" for="taskSubject">Предмет</label>
+          <label class="task-subject" for="taskSubject"><span>Предмет</span>
           <select class="field" id="taskSubject">
             <optgroup label="Языки и литература">
               <option>Русский язык</option><option>Литература</option>
@@ -241,12 +252,22 @@
               <option>Финансовая грамотность</option><option>Мировая художественная культура (МХК)</option>
               <option>Черчение</option><option>Кружок</option><option>Другое</option>
             </optgroup>
-          </select>
-          <label class="task-due" for="taskDueDate"><span>Срок</span><input id="taskDueDate" type="date" aria-label="Срок выполнения, необязательно"></label>
+          </select></label>
+          <label class="task-due" for="taskDueDate"><span>Срок выполнения (необязательно)</span><input id="taskDueDate" type="date"></label>
           <button class="add-btn" type="submit" aria-label="Добавить задачу">+</button>
         </form>
         <label class="urgent-toggle"><input type="checkbox" id="urgentInput"> Отметить как срочную</label>
         <ul class="task-list" id="taskList"></ul>
+        <dialog class="task-dialog" id="taskEditDialog">
+          <form class="dialog-form" id="taskEditForm">
+            <div class="dialog-head"><h3>Изменить задачу</h3><button class="delete-btn" id="closeTaskEdit" type="button" aria-label="Закрыть">×</button></div>
+            <label class="task-subject" for="editTaskName"><span>Задача</span><input class="field" id="editTaskName" maxlength="120" required></label>
+            <label class="task-subject" for="editTaskSubject"><span>Предмет</span><select class="field" id="editTaskSubject"></select></label>
+            <label class="task-due" for="editTaskDue"><span>Срок выполнения (необязательно)</span><input id="editTaskDue" type="date"></label>
+            <label class="urgent-toggle"><input type="checkbox" id="editTaskUrgent"> Отметить как срочную</label>
+            <div class="dialog-actions"><button class="btn" id="cancelTaskEdit" type="button">Отмена</button><button class="btn btn-primary" type="submit">Сохранить</button></div>
+          </form>
+        </dialog>
         <div class="footnote"><span>✦</span> Маленький прогресс — тоже прогресс</div>
       </section>
     </div>
@@ -307,7 +328,7 @@
         const list = $('#taskList');
         const sorted = [...state.tasks].sort((a,b) => Number(a.done)-Number(b.done) || (a.dueDate || '9999-12-31').localeCompare(b.dueDate || '9999-12-31') || Number(b.urgent)-Number(a.urgent) || b.created-a.created);
         $('#taskCount').textContent = `${state.tasks.length} ${state.tasks.length === 1 ? 'задача' : state.tasks.length >= 2 && state.tasks.length <= 4 ? 'задачи' : 'задач'}`;
-        if (!sorted.length) { list.innerHTML = '<li class="empty-state">Пока список пуст. Добавь первую задачу и начни с малого.</li>'; return; }
+        if (!sorted.length) { list.innerHTML = '<li class="empty-state">Начни с небольшого шага: «Прочитать параграф», «Решить 3 задачи» или «Повторить слова».</li>'; return; }
         list.innerHTML = sorted.map(task => `<li class="task-item ${task.done ? 'done' : ''}" data-id="${escapeHtml(task.id)}">
           <input class="check" type="checkbox" aria-label="Отметить выполненной" ${task.done ? 'checked' : ''}>
           <div class="task-copy"><div class="task-name">${escapeHtml(task.name)}</div><div class="task-meta"><span class="tag">${escapeHtml(task.subject)}</span>${task.urgent ? '<span class="urgent">● Срочно</span>' : ''}${getDueBadge(task.dueDate)}</div></div>
@@ -315,6 +336,9 @@
         </li>`).join('');
         list.querySelectorAll('.task-item').forEach(row => {
           const task = state.tasks.find(item => item.id === row.dataset.id);
+          const editButton = document.createElement('button'); editButton.type = 'button'; editButton.className = 'edit-task-btn'; editButton.textContent = 'Изменить'; editButton.setAttribute('aria-label', 'Изменить задачу');
+          row.querySelector('.task-actions').prepend(editButton);
+          editButton.addEventListener('click', () => openTaskEditor(task));
           row.querySelector('.check').addEventListener('change', (event) => { task.done = event.target.checked; if (task.done && state.focusId === task.id) state.focusId = null; persist(); renderTasks(); renderFocus(); });
           row.querySelector('.focus-task-btn').addEventListener('click', () => { state.focusId = task.id; persist(); renderFocus(); $('#timerHeading').scrollIntoView({ behavior:'smooth', block:'center' }); });
           row.querySelector('.delete-btn').addEventListener('click', () => { state.tasks = state.tasks.filter(item => item.id !== task.id); if (state.focusId === task.id) state.focusId = null; persist(); renderTasks(); renderFocus(); });
@@ -330,6 +354,7 @@
         if (days < 0) return `<span class="due-date overdue">Просрочено · ${escapeHtml(shortDate)}</span>`;
         if (days === 0) return '<span class="due-date soon">Сегодня</span>';
         if (days === 1) return '<span class="due-date soon">Завтра</span>';
+        if (days <= 3) return `<span class="due-date soon">Скоро · ${escapeHtml(shortDate)}</span>`;
         return `<span class="due-date">${escapeHtml(shortDate)}</span>`;
       }
       function renderFocus() {
@@ -337,6 +362,32 @@
         $('#focusTask').hidden = !task;
         if (task) $('#focusName').textContent = task.name;
       }
+      let editingTaskId = null;
+      function openTaskEditor(task) {
+        editingTaskId = task.id;
+        const subjectSelect = $('#editTaskSubject');
+        subjectSelect.replaceChildren(...Array.from($('#taskSubject').children).map(option => option.cloneNode(true)));
+        if (!Array.from(subjectSelect.options).some(option => option.value === task.subject)) {
+          const oldSubject = document.createElement('option'); oldSubject.value = task.subject; oldSubject.textContent = task.subject; subjectSelect.add(oldSubject);
+        }
+        $('#editTaskName').value = task.name;
+        subjectSelect.value = task.subject;
+        $('#editTaskDue').value = task.dueDate || '';
+        $('#editTaskUrgent').checked = !!task.urgent;
+        $('#taskEditDialog').showModal();
+      }
+      $('#taskEditForm').addEventListener('submit', event => {
+        event.preventDefault();
+        const task = state.tasks.find(item => item.id === editingTaskId);
+        if (!task) { $('#taskEditDialog').close(); return; }
+        task.name = $('#editTaskName').value.trim();
+        task.subject = $('#editTaskSubject').value;
+        task.dueDate = $('#editTaskDue').value || null;
+        task.urgent = $('#editTaskUrgent').checked;
+        persist(); $('#taskEditDialog').close(); renderTasks(); renderFocus();
+      });
+      $('#cancelTaskEdit').addEventListener('click', () => $('#taskEditDialog').close());
+      $('#closeTaskEdit').addEventListener('click', () => $('#taskEditDialog').close());
       $('#clearFocus').addEventListener('click', () => { state.focusId = null; persist(); renderFocus(); });
       const taskInput = $('#taskInput');
       const resizeTaskInput = () => { taskInput.style.height = 'auto'; taskInput.style.height = taskInput.scrollHeight + 'px'; };
