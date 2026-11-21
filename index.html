@@ -74,6 +74,12 @@
     .modes { display:flex; gap:5px; padding:4px; background:#111216; border:1px solid var(--line); border-radius:12px; }
     .mode-btn { border:0; border-radius:9px; padding:8px 13px; color:var(--muted); background:transparent; cursor:pointer; font-size:12px; transition:.2s ease; }
     .mode-btn.active { color:var(--text); background:#2a2c32; }
+    .timer-settings { width:min(100%,320px); display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:12px; }
+    .duration-setting { display:grid; grid-template-columns:minmax(0,1fr) 68px; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--line); border-radius:11px; background:#111216; }
+    .duration-setting label { color:var(--muted); font-size:11px; }
+    .duration-input { width:100%; min-width:0; color:var(--text); background:var(--surface-2); border:1px solid var(--line); border-radius:8px; padding:6px 5px; text-align:center; font-size:12px; }
+    .duration-input:focus { outline:1px solid rgba(199,243,107,.5); }
+    .duration-input:disabled { opacity:.5; cursor:not-allowed; }
     .clock { --progress:100%; width:222px; aspect-ratio:1; border-radius:50%; display:grid; place-items:center; position:relative; margin:23px 0 17px; background:conic-gradient(var(--lime) var(--progress), rgba(255,255,255,.075) 0); transition:background .25s linear; }
     .clock::before { content:""; position:absolute; inset:7px; border-radius:50%; background:var(--surface); box-shadow:inset 0 0 0 1px rgba(255,255,255,.025); }
     .clock-inner { position:relative; text-align:center; }
@@ -189,6 +195,10 @@
             <button class="mode-btn active" type="button" data-mode="study" aria-pressed="true">Учеба · 25 мин</button>
             <button class="mode-btn" type="button" data-mode="break" aria-pressed="false">Отдых · 5 мин</button>
           </div>
+          <div class="timer-settings" aria-label="Настройка длительности таймера">
+            <div class="duration-setting"><label for="studyDuration">Учёба, мин</label><input class="duration-input" id="studyDuration" data-duration="study" type="number" min="1" max="180" step="1" value="25" inputmode="numeric"></div>
+            <div class="duration-setting"><label for="breakDuration">Отдых, мин</label><input class="duration-input" id="breakDuration" data-duration="break" type="number" min="1" max="60" step="1" value="5" inputmode="numeric"></div>
+          </div>
           <div class="clock" id="clockRing" role="timer" aria-label="25 минут 00 секунд">
             <div class="clock-inner"><span class="timer-time" id="timerDisplay">25:00</span><span class="timer-caption" id="timerCaption">Время учиться</span></div>
           </div>
@@ -244,7 +254,12 @@
   <script>
     (() => {
       const STORAGE_KEY = 'sfokusiruysya-planner-v1';
-      const MODES = { study: 25 * 60, break: 5 * 60 };
+      const DEFAULT_DURATIONS = { study:25, break:5 };
+      const MAX_DURATIONS = { study:180, break:60 };
+      const normalizeDuration = (value, mode) => {
+        const number = Number(value);
+        return Number.isInteger(number) ? Math.max(1, Math.min(MAX_DURATIONS[mode], number)) : DEFAULT_DURATIONS[mode];
+      };
       const $ = (selector) => document.querySelector(selector);
       const todayKey = () => {
         const d = new Date();
@@ -254,11 +269,16 @@
         const d = new Date(); d.setDate(d.getDate() + 14);
         return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
       };
-      let state = { eventName:'Подготовка к важному дню', eventDate:defaultDeadline(), tasks:[], focusId:null, sessionDay:todayKey(), sessions:0, timerMode:'study', timerRemaining:MODES.study, timerEndsAt:null, timerRunning:false };
+      let state = { eventName:'Подготовка к важному дню', eventDate:defaultDeadline(), tasks:[], focusId:null, sessionDay:todayKey(), sessions:0, timerMode:'study', timerDurations:{...DEFAULT_DURATIONS}, timerRemaining:DEFAULT_DURATIONS.study * 60, timerEndsAt:null, timerRunning:false };
       try {
         const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
         if (saved && typeof saved === 'object') state = { ...state, ...saved, tasks:Array.isArray(saved.tasks) ? saved.tasks : [] };
       } catch (error) { console.warn('Не удалось прочитать сохранённые данные.', error); }
+      state.timerDurations = {
+        study:normalizeDuration(state.timerDurations?.study, 'study'),
+        break:normalizeDuration(state.timerDurations?.break, 'break')
+      };
+      const durationSeconds = (timerMode) => state.timerDurations[timerMode] * 60;
       if (state.sessionDay !== todayKey()) { state.sessionDay = todayKey(); state.sessions = 0; }
       const persist = () => {
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
@@ -325,10 +345,39 @@
       });
       renderTasks(); renderFocus();
 
-      let mode = MODES[state.timerMode] ? state.timerMode : 'study';
-      let remaining = Number.isFinite(state.timerRemaining) ? Math.max(0, Math.min(MODES[mode], state.timerRemaining)) : MODES[mode];
+      let mode = state.timerMode === 'break' ? 'break' : 'study';
+      let remaining = Number.isFinite(state.timerRemaining) ? Math.max(0, Math.min(durationSeconds(mode), state.timerRemaining)) : durationSeconds(mode);
       let interval = null, endsAt = null, audioContext = null;
       const display = $('#timerDisplay'), ring = $('#clockRing'), startPause = $('#startPause');
+      function updateModeLabels() {
+        document.querySelectorAll('.mode-btn').forEach(button => {
+          button.textContent = (button.dataset.mode === 'study' ? 'Учёба' : 'Отдых') + ' · ' + state.timerDurations[button.dataset.mode] + ' мин';
+        });
+        $('#studyDuration').value = state.timerDurations.study;
+        $('#breakDuration').value = state.timerDurations.break;
+      }
+      function setDurationInputsDisabled(disabled) {
+        document.querySelectorAll('.duration-input').forEach(input => { input.disabled = disabled; });
+      }
+      updateModeLabels();
+      document.querySelectorAll('.duration-input').forEach(input => input.addEventListener('change', () => {
+        const changedMode = input.dataset.duration;
+        const raw = Number(input.value);
+        if (!Number.isInteger(raw) || raw < 1 || raw > MAX_DURATIONS[changedMode]) {
+          input.value = state.timerDurations[changedMode];
+          return;
+        }
+        state.timerDurations[changedMode] = raw;
+        updateModeLabels();
+        persist();
+        if (!interval && mode === changedMode) {
+          remaining = durationSeconds(mode);
+          saveTimer(false);
+          startPause.textContent = 'Старт';
+          paintTimer();
+        }
+        $('#timerNote').textContent = 'Новая длительность сохранена.';
+      }));
       function saveTimer(running) {
         state.timerMode = mode; state.timerRemaining = remaining;
         state.timerRunning = running; state.timerEndsAt = running ? endsAt : null;
@@ -337,7 +386,7 @@
       function paintTimer() {
         const mins = Math.floor(remaining / 60), secs = remaining % 60;
         display.textContent = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
-        const progress = Math.max(0, Math.min(100, remaining / MODES[mode] * 100));
+        const progress = Math.max(0, Math.min(100, remaining / durationSeconds(mode) * 100));
         ring.style.setProperty('--progress', `${progress}%`);
         ring.setAttribute('aria-label', `${mins} минут ${secs} секунд`);
         document.title = `${display.textContent} · ${mode === 'study' ? 'Фокус' : 'Отдых'}`;
@@ -363,7 +412,7 @@
         $('#timerNote').textContent = mode === 'study' ? 'Сессия завершена — время немного отдохнуть.' : 'Отдых окончен — можно возвращаться к учебе.';
         if (mode === 'study') { if (state.sessionDay !== todayKey()) { state.sessionDay = todayKey(); state.sessions = 0; } state.sessions += 1; $('#sessionCount').textContent = state.sessions; }
         saveTimer(false);
-        startPause.textContent = 'Старт'; startPause.setAttribute('aria-label','Начать таймер');
+        startPause.textContent = 'Старт'; startPause.setAttribute('aria-label','Начать таймер'); setDurationInputsDisabled(false);
       }
       function updateRunningTimer() {
         if (!endsAt) return;
@@ -375,18 +424,18 @@
           remaining = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
           clearInterval(interval); interval = null; endsAt = null;
           if (remaining <= 0) { finishTimer(); return; }
-          saveTimer(false); paintTimer(); startPause.textContent = 'Продолжить'; $('#timerNote').textContent = 'Пауза — нажми, когда будешь готов(а).'; return;
+          saveTimer(false); paintTimer(); startPause.textContent = 'Продолжить'; setDurationInputsDisabled(false); $('#timerNote').textContent = 'Пауза — нажми, когда будешь готов(а).'; return;
         }
-        if (remaining <= 0) remaining = MODES[mode];
+        if (remaining <= 0) remaining = durationSeconds(mode);
         if (audioContext && audioContext.state === 'suspended') audioContext.resume();
         endsAt = Date.now() + remaining * 1000;
         saveTimer(true);
-        startPause.textContent = 'Пауза'; $('#timerNote').textContent = mode === 'study' ? 'Ты справишься. Просто продолжай.' : 'Небольшая передышка — часть работы.';
+        startPause.textContent = 'Пауза'; setDurationInputsDisabled(true); $('#timerNote').textContent = mode === 'study' ? 'Ты справишься. Просто продолжай.' : 'Небольшая передышка — часть работы.';
         interval = setInterval(updateRunningTimer, 250);
       });
-      $('#resetTimer').addEventListener('click', () => { clearInterval(interval); interval = null; endsAt = null; remaining = MODES[mode]; saveTimer(false); startPause.textContent = 'Старт'; $('#timerNote').textContent = 'Один шаг за раз — у тебя получится.'; paintTimer(); });
+      $('#resetTimer').addEventListener('click', () => { clearInterval(interval); interval = null; endsAt = null; remaining = durationSeconds(mode); saveTimer(false); startPause.textContent = 'Старт'; setDurationInputsDisabled(false); $('#timerNote').textContent = 'Один шаг за раз — у тебя получится.'; paintTimer(); });
       document.querySelectorAll('.mode-btn').forEach(button => button.addEventListener('click', () => {
-        clearInterval(interval); interval = null; endsAt = null; mode = button.dataset.mode; remaining = MODES[mode];
+        clearInterval(interval); interval = null; endsAt = null; mode = button.dataset.mode; remaining = durationSeconds(mode); setDurationInputsDisabled(false);
         saveTimer(false);
         document.querySelectorAll('.mode-btn').forEach(item => { const active = item === button; item.classList.toggle('active', active); item.setAttribute('aria-pressed', String(active)); });
         startPause.textContent = 'Старт'; $('#timerCaption').textContent = mode === 'study' ? 'Время учиться' : 'Время выдохнуть'; $('#timerNote').textContent = 'Один шаг за раз — у тебя получится.'; paintTimer();
@@ -399,7 +448,7 @@
         endsAt = state.timerEndsAt;
         remaining = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
         if (remaining > 0) {
-          interval = setInterval(updateRunningTimer, 250); startPause.textContent = 'Пауза';
+          interval = setInterval(updateRunningTimer, 250); startPause.textContent = 'Пауза'; setDurationInputsDisabled(true);
           $('#timerNote').textContent = mode === 'study' ? 'Ты справишься. Просто продолжай.' : 'Небольшая передышка — часть работы.';
         } else finishTimer();
       } else { state.timerRunning = false; state.timerEndsAt = null; }
