@@ -195,7 +195,34 @@
         <div class="section-head"><h2 class="section-title" id="tasksHeading">Учебные задачи</h2><span class="task-count" id="taskCount">0 задач</span></div>
         <form class="task-form" id="taskForm">
           <label class="sr-only" for="taskInput">Новая задача</label><input class="field" id="taskInput" maxlength="120" placeholder="Что нужно сделать?" autocomplete="off" required>
-          <label class="sr-only" for="taskSubject">Предмет</label><select class="field" id="taskSubject"><option>Математика</option><option>Русский</option><option>Физика</option><option>Проект</option></select>
+          <label class="sr-only" for="taskSubject">Предмет</label>
+          <select class="field" id="taskSubject">
+            <optgroup label="Языки и литература">
+              <option>Русский язык</option><option>Литература</option><option>Литературное чтение</option>
+              <option>Родной язык</option><option>Родная литература</option>
+              <option>Иностранный язык</option><option>Английский язык</option><option>Немецкий язык</option><option>Французский язык</option><option>Китайский язык</option><option>Другой иностранный язык</option><option>Второй иностранный язык</option>
+            </optgroup>
+            <optgroup label="Математика и информатика">
+              <option selected>Математика</option><option>Алгебра</option><option>Геометрия</option><option>Вероятность и статистика</option><option>Информатика</option>
+            </optgroup>
+            <optgroup label="Общественные науки">
+              <option>Окружающий мир</option><option>История</option><option>История России</option><option>Всеобщая история</option><option>История родного края</option>
+              <option>Обществознание</option><option>География</option><option>Основы духовно-нравственной культуры народов России (ОДНКНР)</option>
+              <option>Основы религиозных культур и светской этики (ОРКСЭ)</option>
+            </optgroup>
+            <optgroup label="Естественные науки">
+              <option>Биология</option><option>Физика</option><option>Химия</option><option>Астрономия</option><option>Экология</option>
+            </optgroup>
+            <optgroup label="Творчество и практика">
+              <option>Труд (технология)</option><option>Изобразительное искусство (ИЗО)</option><option>Музыка</option>
+              <option>Физическая культура</option><option>Основы безопасности и защиты Родины (ОБЗР)</option>
+            </optgroup>
+            <optgroup label="Проекты и дополнительные занятия">
+              <option>Проект</option><option>Индивидуальный проект</option><option>Экономика</option><option>Право</option>
+              <option>Финансовая грамотность</option><option>Мировая художественная культура (МХК)</option>
+              <option>Черчение</option><option>Факультатив</option><option>Кружок</option><option>Другое</option>
+            </optgroup>
+          </select>
           <button class="add-btn" type="submit" aria-label="Добавить задачу">+</button>
         </form>
         <label class="urgent-toggle"><input type="checkbox" id="urgentInput"> Отметить как срочную</label>
