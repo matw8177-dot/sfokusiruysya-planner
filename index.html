@@ -345,7 +345,111 @@ dialog[open] { animation:dialog-enter .18s ease-out; }
 }
 @media (prefers-reduced-motion: reduce) {
   *,*::before,*::after { scroll-behavior:auto !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
-}</style>
+}
+:where([hidden]) { display:none !important; }
+.topbar { min-height:44px; }
+.page-intro { margin:25px 0 20px; }
+.intro-copy { min-width:0; }
+.intro-copy > .eyebrow { margin-bottom:7px; }
+.page-intro h1 { font-size:clamp(28px,3.6vw,38px); }
+.page-intro p { font-size:14px; }
+.deadline { grid-template-columns:minmax(0,1fr) minmax(250px,auto); padding:27px 30px; }
+.deadline-head { margin-bottom:9px; }
+.deadline-controls label,.task-entry-field > span,.task-subject > span,.task-due > span { color:var(--muted); font-size:11px; font-weight:650; }
+.event-title { font-size:clamp(22px,2.6vw,30px); }
+.deadline-controls input { min-height:40px; }
+.deadline-empty { min-width:250px; display:grid; justify-items:start; gap:13px; padding:4px 0 4px 20px; border-left:1px solid var(--line); }
+.deadline-empty-copy { display:grid; gap:4px; }
+.deadline-empty-copy strong { color:var(--text); font-size:15px; font-weight:650; }
+.deadline-empty-copy span { color:var(--muted); font-size:12px; line-height:1.5; }
+.deadline-add { min-height:38px; padding:8px 13px; border:1px solid color-mix(in srgb,var(--accent) 28%,var(--line)); border-radius:10px; color:var(--accent-ink); background:var(--accent-soft); font:650 12px var(--font-ui); cursor:pointer; transition:background .18s ease,transform .18s ease; }
+.deadline-add:hover { background:color-mix(in srgb,var(--accent-soft) 72%,var(--accent) 28%); transform:translateY(-1px); }
+.countdown { gap:8px; }
+.time-unit { min-width:60px; }
+.time-unit strong { font-size:32px; }
+.time-unit span { font-size:10px; letter-spacing:.06em; }
+.layout { grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr); gap:18px; }
+.focus-card,.tasks-card { padding:25px; }
+.clock { width:258px; margin:21px 0 16px; }
+.timer-time { font-size:59px; }
+.timer-actions .btn { min-width:112px; min-height:44px; }
+.task-overview { display:grid; gap:8px; margin-top:14px; }
+.task-overview-copy { display:flex; align-items:center; justify-content:space-between; gap:12px; color:var(--muted); font-size:11px; font-weight:600; }
+.task-overview-copy span:last-child { color:var(--accent-ink); font-variant-numeric:tabular-nums; }
+.task-progress-track { width:100%; height:6px; overflow:hidden; border-radius:99px; background:var(--surface-soft); }
+.task-progress-track > span { display:block; width:0; height:100%; border-radius:inherit; background:var(--accent); transition:width .24s ease; }
+.task-form { margin-top:15px; }
+.task-entry-field { grid-column:1/-1; min-width:0; display:grid; gap:5px; color:var(--muted); font-size:11px; font-weight:650; }
+.task-entry { grid-column:auto; min-height:44px; }
+.task-subject,.task-due { gap:6px; font-size:11px; }
+.task-form .field,.dialog-form .field,.dialog-form input[type=date] { min-height:42px; font-size:13px; }
+.urgent-toggle { min-height:32px; margin-top:7px; font-size:12px; }
+.task-item { padding:12px; border-radius:15px; }
+.task-name { font-size:13px; line-height:1.45; }
+.task-meta { gap:6px; }
+.tag,.urgent,.due-date,.task-status { font-size:10px; }
+.urgent { color:var(--danger); background:var(--danger-soft); padding:3px 7px; border-radius:7px; }
+.task-status { color:var(--muted); background:var(--surface-soft); padding:3px 7px; border-radius:7px; font-weight:650; }
+.task-status.done { color:var(--success); background:color-mix(in srgb,var(--success) 14%,var(--surface)); }
+.task-status.open { color:var(--text-secondary); }
+.task-item.done { background:var(--surface); }
+.task-item.done .task-name { color:var(--muted); }
+.task-item.done .focus-task-btn { display:none; }
+.focus-task-btn,.edit-task-btn { min-height:36px; font-size:10px; }
+.task-dialog { max-height:min(90vh,760px); max-height:min(90dvh,760px); overscroll-behavior:contain; }
+.dialog-form { gap:15px; }
+.dialog-actions .btn { min-height:42px; }
+.history-summary { gap:10px; }
+.history-stat { min-height:82px; padding:14px; }
+.history-stat strong { font-size:23px; letter-spacing:-.04em; }
+.history-stat span { font-size:11px; }
+@media (max-width:960px) {
+  .deadline { grid-template-columns:minmax(0,1fr) minmax(220px,auto); }
+  .deadline-empty { min-width:220px; }
+  .layout { grid-template-columns:minmax(0,1fr); }
+  .focus-card,.tasks-card { padding:23px; }
+  .clock { width:260px; }
+}
+@media (max-width:600px) {
+  .page-intro { margin:21px 0 17px; }
+  .page-intro h1 { font-size:29px; }
+  .page-intro p { font-size:13px; }
+  .deadline { grid-template-columns:minmax(0,1fr); gap:17px; padding:20px 18px; }
+  .deadline-empty { min-width:0; width:100%; padding:13px 0 0; border-left:0; border-top:1px solid var(--line); }
+  .deadline-add { width:100%; }
+  .deadline-controls { align-items:center; }
+  .deadline-controls input { flex:1; }
+  .countdown { width:100%; justify-content:space-between; gap:2px; }
+  .time-unit { min-width:0; flex:1; }
+  .time-unit strong { font-size:clamp(25px,8vw,31px); }
+  .time-unit span { font-size:9px; }
+  .layout { gap:13px; }
+  .focus-card,.tasks-card { padding:18px; }
+  .clock { width:min(250px,72vw); }
+  .timer-time { font-size:56px; }
+  .task-overview { margin-top:12px; }
+  .task-overview-copy { font-size:10px; }
+  .task-form { grid-template-columns:minmax(0,1fr) 44px; }
+  .task-subject { grid-column:1/-1; }
+  .task-due { grid-column:1; }
+  .add-btn { grid-column:2; width:44px; height:44px; }
+  .task-item { grid-template-columns:auto minmax(0,1fr); }
+  .task-actions { grid-column:2; }
+  .task-meta { align-items:flex-start; }
+  .task-dialog { width:calc(100% - 24px); max-height:min(88vh,760px); max-height:min(88dvh,760px); padding:18px; }
+  .dialog-actions { justify-content:stretch; }
+  .dialog-actions .btn { flex:1; }
+  .history-summary { gap:8px; }
+}
+@media (max-width:380px) {
+  .time-sep { padding-bottom:9px; }
+  .task-head-actions { flex-direction:row; }
+  .task-item { padding:9px; }
+  .focus-task-btn,.edit-task-btn { font-size:9px; }
+  .dialog-actions { flex-direction:column-reverse; }
+  .dialog-actions .btn { width:100%; }
+}
+</style>
 </head>
 <body>
   <main class="shell">
@@ -355,7 +459,6 @@ dialog[open] { animation:dialog-enter .18s ease-out; }
         <div class="brand-copy"><strong>Сфокусируйся</strong><small>Твой учебный план</small></div>
       </a>
       <div class="topbar-actions">
-        <div class="today-pill"><span>Сегодня</span><strong id="todayLabel"></strong></div>
         <button class="theme-toggle" id="themeToggle" type="button" aria-label="Переключить цветовую тему" aria-pressed="false">
           <svg class="moon-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.2 15.1A8.4 8.4 0 0 1 8.9 3.8 8.6 8.6 0 1 0 20.2 15.1Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <svg class="sun-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.7"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
@@ -368,17 +471,21 @@ dialog[open] { animation:dialog-enter .18s ease-out; }
       <a class="nav-link" href="#tasksSection"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 5h12M8 12h12M8 19h12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="m3.5 5 .9.9 1.6-1.8M3.5 12l.9.9L6 11.1M3.5 19l.9.9L6 18.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Задания</a>
     </nav>
     <div class="page-intro">
-      <div><div class="eyebrow">Твой учебный ритм</div><h1>План на сегодня</h1><p>Выбери важное и двигайся в своём темпе.</p></div>
+      <div class="intro-copy"><div class="eyebrow" id="todayLabel"></div><h1 id="greetingLabel">Добро пожаловать</h1><p id="todaySummary">Выбери важное и двигайся в своём темпе.</p></div>
     </div>
 
     <section class="deadline" aria-labelledby="deadlineHeading">
       <div>
         <div class="deadline-head"><span class="live-dot" aria-hidden="true"></span><span class="eyebrow" id="deadlineHeading">Твой главный дедлайн</span></div>
         <label class="sr-only" for="eventName">Название события</label>
-        <input class="event-title" id="eventName" maxlength="70" placeholder="Например, экзамен по физике">
+        <input class="event-title" id="eventName" maxlength="70" placeholder="Например, экзамен по физике" autocomplete="off">
         <div class="deadline-controls"><label for="eventDate">Дата события</label><input id="eventDate" type="date"></div>
       </div>
-      <div class="countdown" aria-label="Осталось до дедлайна">
+      <div class="deadline-empty" id="deadlineEmpty" hidden>
+        <div class="deadline-empty-copy"><strong>Пока без дедлайна</strong><span>Добавь важную дату — отсчёт появится здесь.</span></div>
+        <button class="deadline-add" id="addDeadline" type="button">Добавить дату</button>
+      </div>
+      <div class="countdown" id="deadlineCountdown" aria-label="Осталось до дедлайна" aria-live="polite">
         <div class="time-unit"><strong id="daysLeft">00</strong><span>дней</span></div><span class="time-sep">:</span>
         <div class="time-unit"><strong id="hoursLeft">00</strong><span>часов</span></div><span class="time-sep">:</span>
         <div class="time-unit"><strong id="minutesLeft">00</strong><span>минут</span></div><span class="time-sep">:</span>
@@ -415,8 +522,9 @@ dialog[open] { animation:dialog-enter .18s ease-out; }
 
       <section class="card tasks-card" id="tasksSection" aria-labelledby="tasksHeading">
         <div class="section-head"><h2 class="section-title" id="tasksHeading">Учебные задачи</h2><div class="task-head-actions"><span class="task-count" id="taskCount">0 задач</span><button class="export-btn" id="exportTasks" type="button">Экспорт</button></div></div>
+        <div class="task-overview" id="taskOverview" hidden><div class="task-overview-copy"><span id="taskProgressText">0 выполнено · 0 в работе</span><span id="taskProgressPercent">0%</span></div><div class="task-progress-track" role="progressbar" aria-label="Выполнение задач" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="taskProgressFill"></span></div></div>
         <form class="task-form" id="taskForm">
-          <label class="sr-only" for="taskInput">Новая задача</label><textarea class="field task-entry" id="taskInput" maxlength="120" rows="1" placeholder="Что нужно сделать?" autocomplete="off" required></textarea>
+          <label class="task-entry-field" for="taskInput"><span>Задача</span><textarea class="field task-entry" id="taskInput" maxlength="120" rows="1" placeholder="Например, решить упражнения 4–6" autocomplete="off" required></textarea></label>
           <label class="task-subject" for="taskSubject"><span>Предмет</span>
           <select class="field" id="taskSubject">
             <optgroup label="Языки и литература">
@@ -542,18 +650,29 @@ dialog[open] { animation:dialog-enter .18s ease-out; }
       $('#themeToggle').addEventListener('click', () => { applyTheme(state.theme === 'dark' ? 'light' : 'dark'); persist(); });
       const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
       const eventName = $('#eventName'), eventDate = $('#eventDate');
-      eventName.value = state.eventName || ''; eventDate.value = state.eventDate || defaultDeadline();
+      eventName.value = state.eventName || ''; eventDate.value = typeof state.eventDate === 'string' ? state.eventDate : defaultDeadline();
       $('#todayLabel').textContent = new Intl.DateTimeFormat('ru-RU', { weekday:'long', day:'numeric', month:'long' }).format(new Date());
+      const hour = new Date().getHours();
+      $('#greetingLabel').textContent = hour >= 5 && hour < 12 ? 'Доброе утро' : hour >= 12 && hour < 18 ? 'Добрый день' : 'Добрый вечер';
       document.querySelectorAll('.nav-link').forEach(link => link.addEventListener('click', () => {
         document.querySelectorAll('.nav-link').forEach(item => { item.classList.remove('active'); item.removeAttribute('aria-current'); });
         link.classList.add('active'); link.setAttribute('aria-current','page');
       }));
-      eventName.addEventListener('input', () => { state.eventName = eventName.value; persist(); });
-      eventDate.addEventListener('change', () => { state.eventDate = eventDate.value || defaultDeadline(); persist(); updateCountdown(); });
+      eventName.addEventListener('input', () => { state.eventName = eventName.value; persist(); updateCountdown(); });
+      eventDate.addEventListener('change', () => { state.eventDate = eventDate.value; persist(); updateCountdown(); });
+      $('#addDeadline').addEventListener('click', () => {
+        const target = eventName.value.trim() ? eventDate : eventName;
+        target.focus(); target.scrollIntoView({ behavior:'smooth', block:'center' });
+      });
 
       function updateCountdown() {
-        const date = eventDate.value ? new Date(`${eventDate.value}T23:59:59`) : null;
-        const remaining = date ? Math.max(0, date.getTime() - Date.now()) : 0;
+        const hasDeadline = !!(eventName.value.trim() && eventDate.value);
+        $('#deadlineCountdown').hidden = !hasDeadline;
+        $('#deadlineEmpty').hidden = hasDeadline;
+        $('#deadlineHeading').textContent = hasDeadline ? 'Твой главный дедлайн' : 'Добавь важную дату';
+        if (!hasDeadline) return;
+        const date = new Date(`${eventDate.value}T23:59:59`);
+        const remaining = Math.max(0, date.getTime() - Date.now());
         const seconds = Math.floor(remaining / 1000);
         $('#daysLeft').textContent = String(Math.floor(seconds / 86400)).padStart(2,'0');
         $('#hoursLeft').textContent = String(Math.floor(seconds % 86400 / 3600)).padStart(2,'0');
@@ -580,6 +699,18 @@ dialog[open] { animation:dialog-enter .18s ease-out; }
         });
         $('#taskCount').textContent = `${state.tasks.length} ${state.tasks.length === 1 ? 'задача' : state.tasks.length >= 2 && state.tasks.length <= 4 ? 'задачи' : 'задач'}`;
         if (visible.length !== sorted.length) $('#taskCount').textContent = visible.length + ' из ' + sorted.length;
+        const completedCount = state.tasks.filter(task => task.done).length;
+        const activeCount = state.tasks.length - completedCount;
+        const progress = state.tasks.length ? Math.round(completedCount / state.tasks.length * 100) : 0;
+        $('#taskOverview').hidden = !state.tasks.length;
+        $('#taskProgressText').textContent = `${completedCount} выполнено · ${activeCount} в работе`;
+        $('#taskProgressPercent').textContent = `${progress}%`;
+        $('#taskProgressFill').style.width = `${progress}%`;
+        const progressBar = $('.task-progress-track');
+        progressBar.setAttribute('aria-valuenow', String(progress));
+        $('#todaySummary').textContent = state.tasks.length
+          ? `Выполнено ${completedCount} из ${state.tasks.length} задач · ${activeCount} ещё в работе.`
+          : 'Добавь первую задачу и выбери, с чего начать.';
         if (!sorted.length) { list.innerHTML = '<li class="empty-state">Начни с небольшого шага: «Прочитать параграф», «Решить 3 задачи» или «Повторить слова».</li>'; return; }
         if (!visible.length) {
           list.innerHTML = '<li class="empty-state">По этим фильтрам заданий нет. <button class="btn" id="resetTaskFilters" type="button">Сбросить фильтры</button></li>';
@@ -588,7 +719,7 @@ dialog[open] { animation:dialog-enter .18s ease-out; }
         }
         list.innerHTML = visible.map(task => `<li class="task-item ${task.done ? 'done' : ''}" data-id="${escapeHtml(task.id)}">
           <input class="check" type="checkbox" aria-label="Отметить выполненной" ${task.done ? 'checked' : ''}>
-          <div class="task-copy"><div class="task-name">${escapeHtml(task.name)}</div><div class="task-meta"><span class="tag">${escapeHtml(task.subject)}</span>${task.urgent ? '<span class="urgent">● Срочно</span>' : ''}${getDueBadge(task.dueDate)}</div></div>
+          <div class="task-copy"><div class="task-name">${escapeHtml(task.name)}</div><div class="task-meta"><span class="tag">${escapeHtml(task.subject)}</span><span class="task-status ${task.done ? 'done' : 'open'}">${task.done ? 'Выполнено' : 'В работе'}</span>${task.urgent && !task.done ? '<span class="urgent">Срочно</span>' : ''}${getDueBadge(task.dueDate)}</div></div>
           <div class="task-actions"><button class="focus-task-btn" type="button">Взять в фокус</button><button class="delete-btn" type="button" aria-label="Удалить задачу">×</button></div>
         </li>`).join('');
         list.querySelectorAll('.task-item').forEach(row => {
