@@ -64,6 +64,9 @@
     .section-head { display:flex; justify-content:space-between; align-items:center; gap:12px; }
     .section-title { margin:0; font-size:18px; letter-spacing:-.035em; font-weight:700; }
     .session-count { color:var(--muted); font-size:12px; background:var(--surface-2); border-radius:99px; padding:6px 10px; white-space:nowrap; }
+    .timer-head-tools,.task-head-actions { display:flex; align-items:center; flex-wrap:wrap; justify-content:flex-end; gap:7px; }
+    .history-btn,.export-btn { cursor:pointer; border:1px solid var(--line); border-radius:9px; color:var(--muted); background:rgba(255,255,255,.025); padding:7px 9px; font-size:11px; white-space:nowrap; }
+    .history-btn:hover,.export-btn:hover { color:var(--text); background:var(--surface-2); }
     .focus-task { margin-top:17px; padding:13px 15px; min-height:67px; display:flex; align-items:center; gap:12px; background:rgba(199,243,107,.065); border:1px solid rgba(199,243,107,.16); border-radius:15px; }
     .focus-icon { width:31px; height:31px; display:grid; place-items:center; flex:none; color:#1a1d11; background:var(--lime); border-radius:10px; }
     .focus-copy { min-width:0; flex:1; }
@@ -139,6 +142,13 @@
     .dialog-head { display:flex; justify-content:space-between; align-items:center; gap:12px; }
     .dialog-head h3 { margin:0; font-size:18px; }
     .dialog-actions { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:8px; }
+    .history-summary { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+    .history-stat { padding:12px; border:1px solid var(--line); border-radius:12px; background:rgba(255,255,255,.025); }
+    .history-stat strong { display:block; font-size:20px; color:var(--lime); }
+    .history-stat span { font-size:11px; color:var(--muted); }
+    .history-list { display:grid; gap:7px; max-height:42vh; overflow:auto; padding:0; margin:0; list-style:none; }
+    .history-item { padding:9px 10px; border:1px solid var(--line); border-radius:10px; font-size:12px; }
+    .history-item span { display:block; color:var(--muted); font-size:10px; margin-top:2px; }
     .task-filters { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; margin-top:16px; }
     .period-filters { grid-column:1/-1; display:flex; gap:5px; overflow-x:auto; padding:4px; border:1px solid var(--line); border-radius:12px; background:#111216; }
     .period-filter { flex:1; min-width:max-content; cursor:pointer; border:0; border-radius:9px; padding:8px 11px; color:var(--muted); background:transparent; font-size:12px; }
@@ -204,7 +214,7 @@
 
     <div class="layout">
       <section class="card focus-card" aria-labelledby="timerHeading">
-        <div class="section-head"><h1 class="section-title" id="timerHeading">Время для фокуса</h1><div class="session-count">Сегодня: <strong id="sessionCount">0</strong> сессий</div></div>
+        <div class="section-head"><h1 class="section-title" id="timerHeading">Время для фокуса</h1><div class="timer-head-tools"><div class="session-count">Сегодня: <strong id="sessionCount">0</strong> сессий</div><button class="history-btn" id="historyButton" type="button">История</button></div></div>
         <div class="focus-task" id="focusTask" hidden>
           <div class="focus-icon" aria-hidden="true">◎</div><div class="focus-copy"><div class="eyebrow">Сейчас в фокусе</div><div class="focus-name" id="focusName"></div></div>
           <button class="clear-focus" id="clearFocus" type="button" aria-label="Снять задачу с фокуса">×</button>
@@ -230,7 +240,7 @@
       </section>
 
       <section class="card tasks-card" aria-labelledby="tasksHeading">
-        <div class="section-head"><h2 class="section-title" id="tasksHeading">Учебные задачи</h2><span class="task-count" id="taskCount">0 задач</span></div>
+        <div class="section-head"><h2 class="section-title" id="tasksHeading">Учебные задачи</h2><div class="task-head-actions"><span class="task-count" id="taskCount">0 задач</span><button class="export-btn" id="exportTasks" type="button">Экспорт</button></div></div>
         <form class="task-form" id="taskForm">
           <label class="sr-only" for="taskInput">Новая задача</label><textarea class="field task-entry" id="taskInput" maxlength="120" rows="1" placeholder="Что нужно сделать?" autocomplete="off" required></textarea>
           <label class="task-subject" for="taskSubject"><span>Предмет</span>
@@ -284,8 +294,23 @@
             <div class="dialog-actions"><button class="btn" id="cancelTaskEdit" type="button">Отмена</button><button class="btn btn-primary" type="submit">Сохранить</button></div>
           </form>
         </dialog>
-        <div class="footnote"><span>✦</span> Маленький прогресс — тоже прогресс</div>
+        <div class="footnote"><span>✦</span> <span id="saveStatus">Данные хранятся на устройстве</span> · Маленький прогресс — тоже прогресс</div>
       </section>
+      <dialog class="task-dialog" id="historyDialog">
+        <div class="dialog-form">
+          <div class="dialog-head"><h3>История занятий</h3><button class="delete-btn" id="closeHistory" type="button" aria-label="Закрыть">×</button></div>
+          <div class="history-summary"><div class="history-stat"><strong id="historyTodayCount">0</strong><span>сессий сегодня</span></div><div class="history-stat"><strong id="historyTodayMinutes">0 мин</strong><span>фокуса сегодня</span></div><div class="history-stat"><strong id="historyWeekCount">0</strong><span>сессий за 7 дней</span></div><div class="history-stat"><strong id="historyWeekMinutes">0 мин</strong><span>фокуса за 7 дней</span></div></div>
+          <ul class="history-list" id="historyList"></ul>
+          <div class="dialog-actions"><button class="btn" id="closeHistoryDone" type="button">Готово</button></div>
+        </div>
+      </dialog>
+      <dialog class="task-dialog" id="completionDialog">
+        <div class="dialog-form">
+          <div class="dialog-head"><h3 id="completionTitle">Сессия завершена</h3></div>
+          <p id="completionMessage">Отличная работа.</p>
+          <div class="dialog-actions"><button class="btn" id="completionClose" type="button">Закончить</button><button class="btn" id="completionContinue" type="button">Продолжить</button><button class="btn btn-primary" id="completionNext" type="button">Начать отдых</button></div>
+        </div>
+      </dialog>
     </div>
   </main>
 
@@ -308,7 +333,7 @@
         const d = new Date(); d.setDate(d.getDate() + 14);
         return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
       };
-      let state = { eventName:'Подготовка к важному дню', eventDate:defaultDeadline(), tasks:[], focusId:null, taskFilters:{period:'all',subject:'all',status:'all'}, sessionDay:todayKey(), sessions:0, timerMode:'study', timerDurations:{...DEFAULT_DURATIONS}, timerRemaining:DEFAULT_DURATIONS.study * 60, timerEndsAt:null, timerRunning:false };
+      let state = { eventName:'Подготовка к важному дню', eventDate:defaultDeadline(), tasks:[], focusId:null, taskFilters:{period:'all',subject:'all',status:'all'}, sessionDay:todayKey(), sessions:0, sessionHistory:[], timerMode:'study', timerDurations:{...DEFAULT_DURATIONS}, timerRemaining:DEFAULT_DURATIONS.study * 60, timerEndsAt:null, timerRunning:false };
       try {
         const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
         if (saved && typeof saved === 'object') state = { ...state, ...saved, tasks:Array.isArray(saved.tasks) ? saved.tasks : [] };
@@ -319,6 +344,7 @@
         subject:typeof savedTaskFilters.subject === 'string' ? savedTaskFilters.subject : 'all',
         status:['all','open','overdue','done','urgent'].includes(savedTaskFilters.status) ? savedTaskFilters.status : 'all'
       };
+      state.sessionHistory = Array.isArray(state.sessionHistory) ? state.sessionHistory.slice(-500) : [];
       state.timerDurations = {
         study:normalizeDuration(state.timerDurations?.study, 'study'),
         break:normalizeDuration(state.timerDurations?.break, 'break')
@@ -326,8 +352,8 @@
       const durationSeconds = (timerMode) => state.timerDurations[timerMode] * 60;
       if (state.sessionDay !== todayKey()) { state.sessionDay = todayKey(); state.sessions = 0; }
       const persist = () => {
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-        catch (error) { console.warn('Не удалось сохранить данные в браузере.', error); }
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); $('#saveStatus').textContent = 'Сохранено на устройстве'; }
+        catch (error) { console.warn('Не удалось сохранить данные в браузере.', error); $('#saveStatus').textContent = 'Не удалось сохранить'; }
       };
       const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
       const eventName = $('#eventName'), eventDate = $('#eventDate');
@@ -386,6 +412,39 @@
           row.querySelector('.delete-btn').addEventListener('click', () => { state.tasks = state.tasks.filter(item => item.id !== task.id); if (state.focusId === task.id) state.focusId = null; persist(); renderTasks(); renderFocus(); });
         });
       }
+      function renderHistory() {
+        const valid = state.sessionHistory.filter(session => Number.isFinite(session.at) && Number.isFinite(session.minutes)).sort((a,b) => b.at-a.at);
+        const today = valid.filter(session => dateKey(new Date(session.at)) === todayKey());
+        const week = valid.filter(session => session.at >= Date.now() - 7 * 86400000);
+        const minutes = items => items.reduce((total,session) => total + session.minutes,0);
+        $('#historyTodayCount').textContent = today.length;
+        $('#historyTodayMinutes').textContent = minutes(today) + ' мин';
+        $('#historyWeekCount').textContent = week.length;
+        $('#historyWeekMinutes').textContent = minutes(week) + ' мин';
+        const list = $('#historyList');
+        list.replaceChildren();
+        if (!valid.length) {
+          const empty = document.createElement('li'); empty.className = 'empty-state'; empty.textContent = 'Завершённые учебные сессии появятся здесь.'; list.append(empty); return;
+        }
+        valid.slice(0,30).forEach(session => {
+          const row = document.createElement('li'); row.className = 'history-item';
+          const title = document.createElement('strong'); title.textContent = session.taskName || 'Учебная сессия';
+          const details = document.createElement('span');
+          const time = new Intl.DateTimeFormat('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}).format(new Date(session.at));
+          details.textContent = [time,session.minutes + ' мин',session.subject].filter(Boolean).join(' · ');
+          row.append(title,details); list.append(row);
+        });
+      }
+      $('#historyButton').addEventListener('click', () => { renderHistory(); $('#historyDialog').showModal(); });
+      $('#closeHistory').addEventListener('click', () => $('#historyDialog').close());
+      $('#closeHistoryDone').addEventListener('click', () => $('#historyDialog').close());
+      $('#exportTasks').addEventListener('click', () => {
+        const rows = [['Задача','Предмет','Срок','Срочно','Выполнено'],...state.tasks.map(task => [task.name,task.subject,task.dueDate || '',task.urgent ? 'Да' : 'Нет',task.done ? 'Да' : 'Нет'])];
+        const csv = rows.map(row => row.map(value => '"' + String(value).replace(/"/g,'""') + '"').join(';')).join('\r\n');
+        const blob = new Blob(['\uFEFF' + csv],{type:'text/csv;charset=utf-8'});
+        const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'учебные-задачи-' + todayKey() + '.csv'; link.click();
+        setTimeout(() => URL.revokeObjectURL(link.href),1000);
+      });
       function getDueBadge(value) {
         if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return '';
         const due = new Date(`${value}T00:00:00`);
@@ -548,9 +607,20 @@
       function finishTimer() {
         clearInterval(interval); interval = null; endsAt = null; remaining = 0; paintTimer(); soundComplete();
         $('#timerNote').textContent = mode === 'study' ? 'Сессия завершена — время немного отдохнуть.' : 'Отдых окончен — можно возвращаться к учебе.';
-        if (mode === 'study') { if (state.sessionDay !== todayKey()) { state.sessionDay = todayKey(); state.sessions = 0; } state.sessions += 1; $('#sessionCount').textContent = state.sessions; }
+        if (mode === 'study') {
+          if (state.sessionDay !== todayKey()) { state.sessionDay = todayKey(); state.sessions = 0; }
+          state.sessions += 1; $('#sessionCount').textContent = state.sessions;
+          const focusTask = state.tasks.find(task => task.id === state.focusId);
+          state.sessionHistory.unshift({ at:Date.now(), minutes:state.timerDurations.study, subject:focusTask?.subject || '', taskName:focusTask?.name || '' });
+          state.sessionHistory = state.sessionHistory.slice(0,500);
+        }
         saveTimer(false);
         startPause.textContent = 'Старт'; startPause.setAttribute('aria-label','Начать таймер'); setDurationInputsDisabled(false);
+        $('#completionTitle').textContent = mode === 'study' ? 'Сессия завершена' : 'Отдых окончен';
+        $('#completionMessage').textContent = mode === 'study' ? 'Хорошая работа. Выбери, что делать дальше.' : 'Передышка закончилась. Можно продолжить заниматься.';
+        $('#completionNext').textContent = mode === 'study' ? 'Начать отдых' : 'Вернуться к учёбе';
+        $('#completionContinue').textContent = mode === 'study' ? 'Продолжить учиться' : 'Продлить отдых';
+        $('#completionDialog').showModal();
       }
       function updateRunningTimer() {
         if (!endsAt) return;
@@ -578,6 +648,18 @@
         document.querySelectorAll('.mode-btn').forEach(item => { const active = item === button; item.classList.toggle('active', active); item.setAttribute('aria-pressed', String(active)); });
         startPause.textContent = 'Старт'; $('#timerCaption').textContent = mode === 'study' ? 'Время учиться' : 'Время выдохнуть'; $('#timerNote').textContent = 'Один шаг за раз — у тебя получится.'; paintTimer();
       }));
+      $('#completionClose').addEventListener('click', () => $('#completionDialog').close());
+      $('#completionNext').addEventListener('click', () => {
+        const nextMode = mode === 'study' ? 'break' : 'study';
+        $('#completionDialog').close();
+        document.querySelector('.mode-btn[data-mode="' + nextMode + '"]').click();
+        startPause.click();
+      });
+      $('#completionContinue').addEventListener('click', () => {
+        $('#completionDialog').close();
+        $('#resetTimer').click();
+        startPause.click();
+      });
       document.addEventListener('visibilitychange', () => {
         if (!document.hidden && interval && endsAt) updateRunningTimer();
       });
