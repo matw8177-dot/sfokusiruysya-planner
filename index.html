@@ -4,6 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#101114">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Сфокусируйся">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
   <title>Сфокусируйся — учебный планировщик</title>
   <style>
     :root {
@@ -272,7 +277,7 @@
       });
       renderTasks(); renderFocus();
 
-      let mode = 'study', remaining = MODES.study, interval = null, audioContext = null;
+      let mode = 'study', remaining = MODES.study, interval = null, endsAt = null, audioContext = null;
       const display = $('#timerDisplay'), ring = $('#clockRing'), startPause = $('#startPause');
       function paintTimer() {
         const mins = Math.floor(remaining / 60), secs = remaining % 60;
@@ -299,26 +304,50 @@
         } catch (error) { console.warn('Звуковой сигнал недоступен в этом браузере.', error); }
       }
       function finishTimer() {
-        clearInterval(interval); interval = null; remaining = 0; paintTimer(); soundComplete();
+        clearInterval(interval); interval = null; endsAt = null; remaining = 0; paintTimer(); soundComplete();
         $('#timerNote').textContent = mode === 'study' ? 'Сессия завершена — время немного отдохнуть.' : 'Отдых окончен — можно возвращаться к учебе.';
         if (mode === 'study') { if (state.sessionDay !== todayKey()) { state.sessionDay = todayKey(); state.sessions = 0; } state.sessions += 1; $('#sessionCount').textContent = state.sessions; persist(); }
         startPause.textContent = 'Старт'; startPause.setAttribute('aria-label','Начать таймер');
       }
       startPause.addEventListener('click', () => {
-        if (interval) { clearInterval(interval); interval = null; startPause.textContent = 'Продолжить'; $('#timerNote').textContent = 'Пауза — нажми, когда будешь готов(а).'; return; }
+        if (interval) {
+          remaining = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+          clearInterval(interval); interval = null; endsAt = null;
+          if (remaining <= 0) { finishTimer(); return; }
+          paintTimer(); startPause.textContent = 'Продолжить'; $('#timerNote').textContent = 'Пауза — нажми, когда будешь готов(а).'; return;
+        }
         if (remaining <= 0) remaining = MODES[mode];
         if (audioContext && audioContext.state === 'suspended') audioContext.resume();
+        endsAt = Date.now() + remaining * 1000;
         startPause.textContent = 'Пауза'; $('#timerNote').textContent = mode === 'study' ? 'Ты справишься. Просто продолжай.' : 'Небольшая передышка — часть работы.';
-        interval = setInterval(() => { remaining -= 1; paintTimer(); if (remaining <= 0) finishTimer(); }, 1000);
+        interval = setInterval(() => {
+          remaining = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+          paintTimer(); if (remaining <= 0) finishTimer();
+        }, 250);
       });
-      $('#resetTimer').addEventListener('click', () => { clearInterval(interval); interval = null; remaining = MODES[mode]; startPause.textContent = 'Старт'; $('#timerNote').textContent = 'Один шаг за раз — у тебя получится.'; paintTimer(); });
+      $('#resetTimer').addEventListener('click', () => { clearInterval(interval); interval = null; endsAt = null; remaining = MODES[mode]; startPause.textContent = 'Старт'; $('#timerNote').textContent = 'Один шаг за раз — у тебя получится.'; paintTimer(); });
       document.querySelectorAll('.mode-btn').forEach(button => button.addEventListener('click', () => {
-        clearInterval(interval); interval = null; mode = button.dataset.mode; remaining = MODES[mode];
+        clearInterval(interval); interval = null; endsAt = null; mode = button.dataset.mode; remaining = MODES[mode];
         document.querySelectorAll('.mode-btn').forEach(item => { const active = item === button; item.classList.toggle('active', active); item.setAttribute('aria-pressed', String(active)); });
         startPause.textContent = 'Старт'; $('#timerCaption').textContent = mode === 'study' ? 'Время учиться' : 'Время выдохнуть'; $('#timerNote').textContent = 'Один шаг за раз — у тебя получится.'; paintTimer();
       }));
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && interval && endsAt) {
+          remaining = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+          paintTimer(); if (remaining <= 0) finishTimer();
+        }
+      });
       $('#sessionCount').textContent = state.sessions || 0; paintTimer();
     })();
+  </script>
+  <script>
+    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js').catch((error) => {
+          console.warn('Не удалось включить офлайн-режим.', error);
+        });
+      });
+    }
   </script>
 </body>
 </html>
