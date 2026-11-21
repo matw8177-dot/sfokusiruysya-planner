@@ -94,8 +94,9 @@
     .timer-note { color:var(--muted); font-size:11px; margin-top:15px; }
     .tasks-card { padding:23px; }
     .task-count { color:var(--muted); font-size:12px; }
-    .task-form { display:grid; grid-template-columns:minmax(0,1fr) 125px 138px auto; gap:8px; margin-top:17px; align-items:start; }
+    .task-form { display:grid; grid-template-columns:minmax(0,1fr) 138px 42px; gap:8px; margin-top:17px; align-items:start; }
     .field { min-width:0; color:var(--text); background:#111216; border:1px solid var(--line); border-radius:11px; padding:10px 11px; outline:none; transition:border-color .2s; }
+    .task-entry { grid-column:1 / -1; display:block; width:100%; min-height:42px; resize:none; overflow:hidden; line-height:1.4; overflow-wrap:anywhere; }
     .field:focus { border-color:rgba(199,243,107,.5); }
     .field::placeholder { color:#6d7079; }
     select.field { cursor:pointer; }
@@ -143,6 +144,7 @@
       .focus-card,.tasks-card { padding:20px; }
       .clock { width:205px; }
       .timer-time { font-size:51px; }
+      .task-form { grid-template-columns:minmax(0,1fr) minmax(0,1fr) 42px; }
     }
     @media (max-width:390px) {
       .today-pill { font-size:11px; padding:7px 9px; }
@@ -150,11 +152,7 @@
       .deadline-controls { flex-wrap:wrap; }
       .time-unit { min-width:46px; }
       .time-unit strong { font-size:23px; }
-      .task-form { grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto; }
-      .task-form #taskInput { grid-column:1 / -1; }
-      .task-form select { grid-column:1; }
-      .task-due { grid-column:2; }
-      .task-form .add-btn { grid-column:3; }
+
       .task-actions { gap:2px; }
       .focus-task-btn { padding:7px; }
     }
@@ -213,7 +211,7 @@
       <section class="card tasks-card" aria-labelledby="tasksHeading">
         <div class="section-head"><h2 class="section-title" id="tasksHeading">Учебные задачи</h2><span class="task-count" id="taskCount">0 задач</span></div>
         <form class="task-form" id="taskForm">
-          <label class="sr-only" for="taskInput">Новая задача</label><input class="field" id="taskInput" type="text" maxlength="120" placeholder="Что нужно сделать?" autocomplete="off" required>
+          <label class="sr-only" for="taskInput">Новая задача</label><textarea class="field task-entry" id="taskInput" maxlength="120" rows="1" placeholder="Что нужно сделать?" autocomplete="off" required></textarea>
           <label class="sr-only" for="taskSubject">Предмет</label>
           <select class="field" id="taskSubject">
             <optgroup label="Языки и литература">
@@ -337,11 +335,14 @@
         if (task) $('#focusName').textContent = task.name;
       }
       $('#clearFocus').addEventListener('click', () => { state.focusId = null; persist(); renderFocus(); });
+      const taskInput = $('#taskInput');
+      const resizeTaskInput = () => { taskInput.style.height = 'auto'; taskInput.style.height = taskInput.scrollHeight + 'px'; };
+      taskInput.addEventListener('input', resizeTaskInput);
       $('#taskForm').addEventListener('submit', (event) => {
         event.preventDefault();
         const input = $('#taskInput'), dueInput = $('#taskDueDate'), name = input.value.trim(); if (!name) return;
         state.tasks.push({ id: (globalThis.crypto && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`, name, subject:$('#taskSubject').value, dueDate:dueInput.value || null, urgent:$('#urgentInput').checked, done:false, created:Date.now() });
-        input.value = ''; dueInput.value = ''; $('#urgentInput').checked = false; persist(); renderTasks(); input.focus();
+        input.value = ''; resizeTaskInput(); dueInput.value = ''; $('#urgentInput').checked = false; persist(); renderTasks(); input.focus();
       });
       renderTasks(); renderFocus();
 
