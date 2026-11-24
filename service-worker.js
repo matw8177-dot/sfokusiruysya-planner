@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sfokusiruysya-pwa-v9';
+const CACHE_NAME = 'sfokusiruysya-pwa-v10';
 const APP_FILES = [
   './',
   './index.html',
