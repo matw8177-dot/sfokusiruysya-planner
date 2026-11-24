@@ -277,10 +277,11 @@ input[type=date] {
 .field::placeholder { color:var(--muted); opacity:.82; }
 select.field { cursor:pointer; }
 .task-subject { grid-column:2; min-width:0; display:grid; gap:5px; color:var(--muted); font-size:11px; font-weight:650; }
-.task-due {
-  grid-column:3; min-width:0; display:grid; gap:5px; padding:0; border:0;
-  background:transparent; color:var(--muted); font-size:11px; font-weight:650;
-}
+.task-due-row { grid-column:3/5; min-width:0; display:grid; gap:5px; color:var(--muted); font-size:11px; font-weight:650; }
+.task-due-label { display:block; min-width:0; }
+.task-due-controls { min-width:0; display:grid; grid-template-columns:minmax(0,1fr) 50px; gap:10px; align-items:center; }
+.task-due-controls input { display:block; width:100%; min-width:0; max-width:100%; height:42px; box-sizing:border-box; }
+.task-due-controls .add-btn { grid-column:2; width:50px; min-width:50px; max-width:50px; height:42px; min-height:42px; max-height:42px; }
 .task-subject > span,.task-due > span { color:var(--muted); font-size:11px; font-weight:650; }
 .task-due input {
   min-width:0; width:100%; min-height:42px; border:1px solid var(--line); outline:0;
@@ -399,16 +400,18 @@ dialog[open] { animation:dialog-enter .17s ease-out; }
   .clock { width:224px; }
   .task-form { grid-template-columns:minmax(0,1fr) minmax(170px,.8fr) 52px; }
   .task-subject { grid-column:1; }
-  .task-due { grid-column:2; }
-  .add-btn { grid-column:3; width:52px; }
+  .task-due-row { grid-column:2/4; }
+  .task-due-controls { grid-template-columns:minmax(0,1fr) 52px; }
+  .task-due-controls .add-btn { grid-column:2; width:52px; min-width:52px; max-width:52px; }
 }
 @media (max-width:760px) {
   .shell { width:calc(100% - 36px); }
   .focus-card,.tasks-card { padding:19px; }
   .task-form { grid-template-columns:minmax(0,1fr) 48px; }
   .task-entry-field,.task-subject { grid-column:1/-1; }
-  .task-due { grid-column:1; }
-  .add-btn { grid-column:2; width:48px; }
+  .task-due-row { grid-column:1/-1; }
+  .task-due-controls { grid-template-columns:minmax(0,1fr) 48px; }
+  .task-due-controls .add-btn { width:48px; min-width:48px; max-width:48px; }
   .task-item { grid-template-columns:20px minmax(0,1fr); gap:9px; }
   .task-actions { grid-column:2; justify-content:flex-start; }
 }
@@ -448,12 +451,13 @@ dialog[open] { animation:dialog-enter .17s ease-out; }
   .timer-actions .btn { min-height:42px; }
   .timer-note { font-size:10px; }
   .task-overview { margin-top:11px; }
-  .task-form { grid-template-columns:minmax(0,50%) 60px; gap:10px; }
+  .task-form { grid-template-columns:minmax(0,1fr); gap:10px; }
   .task-form > * { min-width:0; max-width:100%; }
   .task-entry-field,.task-subject { grid-column:1/-1; }
-  .task-due { grid-column:1; grid-row:3; display:grid; grid-template-columns:minmax(0,1fr); width:100%; min-width:0; max-width:100%; margin:0; position:static; box-sizing:border-box; }
-  .task-due input { display:block; width:100%; min-width:0; max-width:100%; height:50px; min-height:50px; margin:0; position:static; box-sizing:border-box; padding-inline:8px; }
-  .add-btn { grid-column:2; grid-row:3; position:static; float:none; margin:0; justify-self:end; width:60px; min-width:60px; max-width:60px; height:60px; min-height:60px; max-height:60px; flex-shrink:0; align-self:end; }
+  .task-due-row { grid-column:1/-1; }
+  .task-due-controls { grid-template-columns:minmax(0,50%) 60px; gap:10px; }
+  .task-due-controls input { height:50px; min-height:50px; padding-inline:8px; }
+  .task-due-controls .add-btn { width:60px; min-width:60px; max-width:60px; height:60px; min-height:60px; max-height:60px; flex-shrink:0; }
   .urgent-toggle { margin-top:8px; min-height:34px; }
   .task-filters { grid-template-columns:1fr; gap:8px; }
   .period-filters { overflow-x:auto; scrollbar-width:none; }
@@ -488,7 +492,7 @@ dialog[open] { animation:dialog-enter .17s ease-out; }
   .dialog-actions .btn { width:100%; }
 }
 @media (pointer:coarse) {
-  .field,.duration-input,input[type=date],.task-due input { font-size:16px; }
+  .field,.duration-input,input[type=date],.task-due input,.task-due-controls input { font-size:16px; }
   .btn,.theme-toggle,.nav-link,.history-btn,.export-btn,.focus-task-btn,.edit-task-btn,.delete-btn { min-height:40px; }
 }
 @media (prefers-reduced-motion:reduce) {
@@ -596,8 +600,7 @@ dialog[open] { animation:dialog-enter .17s ease-out; }
               <option>Черчение</option><option>Кружок</option><option>Другое</option>
             </optgroup>
           </select></label>
-          <label class="task-due" for="taskDueDate"><span>Срок выполнения (необязательно)</span><input id="taskDueDate" type="date"></label>
-          <button class="add-btn" type="submit" aria-label="Добавить задачу">+</button>
+          <div class="task-due-row"><label class="task-due-label" for="taskDueDate">Срок выполнения (необязательно)</label><div class="task-due-controls"><input id="taskDueDate" type="date"><button class="add-btn" type="submit" aria-label="Добавить задачу">+</button></div></div>
         </form>
         <label class="urgent-toggle"><input type="checkbox" id="urgentInput"> Отметить как срочную</label>
         <div class="task-filters">
